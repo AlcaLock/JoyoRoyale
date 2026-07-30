@@ -1,0 +1,107 @@
+﻿@model Crucero.Application.DTOs.HabitacionesDTO
+
+@{
+    ViewData["Title"] = "Crear Habitación";
+}
+
+<h1 class="mb-3">Crear Habitación</h1>
+
+<div class="card shadow-lg p-4">
+    <form asp-action="Create" asp-antiforgery="true" class="row g-3" enctype="multipart/form-data">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Nombre" class="form-label">Nombre</label>
+                <input asp-for="Nombre" class="form-control" required />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="CapacidadMinima" class="form-label">Capacidad Mínima</label>
+                    <input asp-for="CapacidadMinima" type="number" class="form-control" required />
+                    <span asp-validation-for="CapacidadMinima" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CapacidadMaxima" class="form-label">Capacidad Máxima</label>
+                    <input asp-for="CapacidadMaxima" type="number" class="form-control" required />
+                    <span asp-validation-for="CapacidadMaxima" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Tamano" class="form-label">Tamaño (m²)</label>
+                <input asp-for="Tamano" type="number" step="0.01" class="form-control" required />
+                <span asp-validation-for="Tamano" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="form-label">Imagen</label>
+                <input type="file" class="form-control" name="imageFile" id="imageFile" accept="image/*" required />
+                <span asp-validation-for="Imagen" class="text-danger"></span>
+            </div>
+
+            <!-- Vista previa de la imagen antes de subir -->
+            <div class="mt-3">
+                <img id="imagePreview" src="#" alt="Vista previa" class="img-thumbnail d-none" width="250">
+            </div>
+
+            <div class="form-group mt-3">
+                <div class="btn-group">
+                    <a asp-action="IndexAdmin" class="btn btn-secondary">Regresar</a>
+                    <button type="submit" class="btn btn-primary">Crear</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    
+
+   
+    <script>
+        // Vista previa de la imagen seleccionada
+        document.getElementById('imageFile').addEventListener('change', function (event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const preview = document.getElementById('imagePreview');
+                preview.src = reader.result;
+                preview.classList.remove('d-none');
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        });
+
+              // Mostrar alertas con SweetAlert si hay errores o mensajes de éxito
+        var errores = @Html.Raw(Json.Serialize(TempData["ErrorMessages"]));
+        if (errores) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Errores encontrados',
+                html: errores.replace(/\|/g, '<br>'), // Reemplaza "|" por saltos de línea
+            });
+        }
+
+        var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+        if (mensaje) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje
+            });
+        }
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+  
+}

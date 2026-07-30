@@ -1,0 +1,115 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Acceso Denegado";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Crucero.Web</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+        }
+
+        .forbidden-container {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .forbidden-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .denied-content {
+            flex: 1 1 400px;
+            padding: 2rem;
+        }
+
+        .denied-image {
+            flex: 1 1 400px;
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .denied-image img {
+                max-width: 100%;
+                height: auto;
+            }
+
+        .icon-wrapper {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+
+        .btn-back {
+            background: linear-gradient(45deg, #ff4e50, #f9d423);
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+            .btn-back:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            }
+    </style>
+</head>
+<body>
+    <div class="forbidden-container">
+        <div class="forbidden-card">
+            <div class="denied-content">
+                <div class="text-center">
+                    <div class="icon-wrapper">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h2 class="mb-3">¡Acceso Denegado!</h2>
+                    <p class="text-muted mb-4">
+                        Lo sentimos, no tienes permiso para ingresar a esta sección.<br />
+                        Si crees que esto es un error, por favor contacta al administrador del sistema.
+                    </p>
+                    <div class="d-flex justify-content-center">
+                        <a href="javascript:history.back()" class="btn-back">
+                            <i class="bi bi-arrow-left-circle me-2"></i>Regresar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="denied-image d-none d-md-flex">
+                <!-- Inserta tu imagen aquí: -->
+                <img src="~/imagenes/Forbidden.png" alt="Acceso Denegado" />
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

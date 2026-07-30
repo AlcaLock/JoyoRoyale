@@ -1,0 +1,116 @@
+﻿@model Crucero.Application.DTOs.HabitacionesDTO
+
+@{
+    ViewData["Title"] = "Editar Habitación";
+}
+
+<h1>Editar Habitación</h1>
+
+<h4>Detalles de la Habitación</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Campo de ID (solo lectura) -->
+            <div class="form-group">
+                <label asp-for="Id" class="control-label"></label>
+                <input asp-for="Id" class="form-control" readonly />
+            </div>
+
+            <!-- Campo de Nombre -->
+            <div class="form-group">
+                <label asp-for="Nombre" class="control-label"></label>
+                <input asp-for="Nombre" class="form-control" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <!-- Campo de Descripción -->
+            <div class="form-group">
+                <label asp-for="Descripcion" class="control-label"></label>
+                <textarea asp-for="Descripcion" class="form-control"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <!-- Capacidad Mínima -->
+            <div class="form-group">
+                <label asp-for="CapacidadMinima" class="control-label"></label>
+                <input asp-for="CapacidadMinima" type="number" class="form-control" />
+                <span asp-validation-for="CapacidadMinima" class="text-danger"></span>
+            </div>
+
+            <!-- Capacidad Máxima -->
+            <div class="form-group">
+                <label asp-for="CapacidadMaxima" class="control-label"></label>
+                <input asp-for="CapacidadMaxima" type="number" class="form-control" />
+                <span asp-validation-for="CapacidadMaxima" class="text-danger"></span>
+            </div>
+
+            <!-- Tamaño de la habitación -->
+            <div class="form-group">
+                <label asp-for="Tamano" class="control-label"></label>
+                <input asp-for="Tamano" class="form-control" />
+                <span asp-validation-for="Tamano" class="text-danger"></span>
+            </div>
+
+            <!-- Imagen actual -->
+            <div class="form-group">
+                <label>Imagen actual:</label>
+                @if (Model.Imagen != null && Model.Imagen.Length > 0)
+                {
+                    <div>
+                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(Model.Imagen)" class="img-thumbnail" width="150" />
+                    </div>
+                }
+                else
+                {
+                    <p>No hay imagen disponible.</p>
+                }
+            </div>
+
+            <!-- Campo para subir nueva imagen -->
+            <div class="form-group">
+                <label>Subir nueva imagen:</label>
+                <input type="file" class="form-control" name="nuevaImagen" />
+            </div>
+
+            <br />
+
+            <!-- Botón de guardar -->
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <a asp-action="IndexAdmin" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+                 var errores = @Html.Raw(Json.Serialize(TempData["ErrorMessages"]));
+            if (errores) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Errores encontrados',
+                    html: errores.replace(/\|/g, '<br>'),
+                });
+            }
+
+            var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+            if (mensaje) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: mensaje
+                });
+            }
+
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

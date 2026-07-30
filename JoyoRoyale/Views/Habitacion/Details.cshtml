@@ -1,0 +1,62 @@
+﻿@model Crucero.Application.DTOs.HabitacionesDTO
+
+@{
+    ViewData["Title"] = "Detalles de la Habitación";
+}
+
+<h1>Detalles de la Habitación</h1>
+
+<div class="row d-flex align-items-start">
+    <!-- Columna de la imagen -->
+    <div class="col-md-4">
+        <img class="img-fluid rounded"
+             style="max-height: 460px; width: 100%; object-fit: cover;"
+             role="img"
+             src="data:image/jpeg;charset=utf-8;base64,@Convert.ToBase64String(Model.Imagen)"
+             alt="Imagen de la habitación" />
+    </div>
+
+    <!-- Columna de la información -->
+    <div class="col-md-8">
+        <h4>@Model.Nombre</h4>
+        <hr />
+        <dl class="row">
+         
+
+            <dt class="col-sm-4">
+                @Html.DisplayNameFor(model => model.Descripcion)
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.Descripcion)
+            </dd>
+
+            <dt class="col-sm-4">
+                Cantidad mínima de huéspedes
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.CapacidadMinima)
+            </dd>
+
+            <dt class="col-sm-4">
+                Cantidad máxima de huéspedes
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.CapacidadMaxima)
+            </dd>
+
+            <dt class="col-sm-4">
+                Tamaño total aproximado
+            </dt>
+            <dd class="col-sm-8">
+                @Html.DisplayFor(model => model.Tamano) m²
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="btn-group mt-3" role="group" aria-label="Acciones">
+    <a asp-action="Index" class="btn btn-info">
+        <i class="bi bi-arrow-return-left"></i>
+        Regresar al listado
+    </a>
+</div>

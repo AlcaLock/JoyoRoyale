@@ -1,0 +1,196 @@
+﻿@model Crucero.Application.DTOs.UsuariosDTO
+
+@{
+    ViewData["Title"] = "Registro de Usuarios";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - JoyoRoyale</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-image: url('/imagenes/CruceroAventuraTropical.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+        }
+
+        .input-validation-error {
+            border-color: #dc3545;
+        }
+
+        .field-validation-error {
+            color: #dc3545;
+            font-size: 0.875em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Registro de Cliente</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="registroForm" asp-controller="Usuarios" asp-action="Registro" method="post" asp-antiforgery="true">
+                            <!-- Nombre -->
+                            <div class="mb-3">
+                                <label asp-for="Nombre" class="form-label"></label>
+                                <input asp-for="Nombre" class="form-control" autocomplete="name" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+
+                            <!-- Correo -->
+                            <div class="mb-3">
+                                <label asp-for="Correo" class="form-label"></label>
+                                <input asp-for="Correo" class="form-control" type="email" autocomplete="email" />
+                                <span asp-validation-for="Correo" class="text-danger"></span>
+                            </div>
+
+                            <!-- Teléfono con formateo automático -->
+                            <div class="mb-3">
+                                <label asp-for="Telefono" class="form-label"></label>
+                                <input asp-for="Telefono" class="form-control" type="tel" autocomplete="tel"
+                                       id="telefono" placeholder="Ejemplo: 6044 8095" />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                                <small class="text-muted">Ingrese 8 dígitos (ej: 60448095)</small>
+                            </div>
+
+                            <!-- Fecha de Nacimiento -->
+                            <div class="mb-3">
+                                <label asp-for="FechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input asp-for="FechaNacimiento" class="form-control" type="date"
+                                       max="@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")"
+                                       min="@DateTime.Now.AddYears(-100).ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="FechaNacimiento" class="text-danger"></span>
+                                <small class="text-muted">Debe ser mayor de 18 años</small>
+                            </div>
+
+                            <!-- País -->
+                            <div class="mb-3">
+                                <label for="pais" class="form-label">País</label>
+                                <select id="pais" name="Pais" class="form-select" required>
+                                    <option value="">Seleccione un país</option>
+                                    @foreach (var pais in Model.Paises)
+                                    {
+                                        <option value="@pais.Nombre">@pais.Nombre</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Pais" class="text-danger"></span>
+                            </div>
+
+                            <!-- Contraseña -->
+                            <div class="mb-3">
+                                <label asp-for="Contrasena" class="form-label">Contraseña</label>
+                                <input asp-for="Contrasena" class="form-control" type="password"
+                                       autocomplete="new-password" />
+                                <span asp-validation-for="Contrasena" class="text-danger"></span>
+                                <small class="text-muted">Mínimo 6 caracteres</small>
+                            </div>
+
+                            <!-- RolId oculto (Cliente = 2) -->
+                            <input type="hidden" name="RolId" value="2" />
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success">Registrarse</button>
+                                <a asp-controller="Login" asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Formateo automático del teléfono (XXXX XXXX)
+            $('#telefono').on('input', function(e) {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length > 4) {
+                    value = value.substring(0, 4) + ' ' + value.substring(4, 8);
+                }
+                $(this).val(value.substring(0, 9)); // Limita a 8 dígitos + espacio
+            });
+
+            // Validación personalizada para el teléfono
+            $.validator.addMethod("exactPhoneLength", function(value, element) {
+                return value.replace(/\s/g, '').length === 8;
+            }, "El teléfono debe tener exactamente 8 dígitos");
+
+            // Configuración de validación
+            $('#registroForm').validate({
+                rules: {
+                    Telefono: {
+                        required: true,
+                        exactPhoneLength: true
+                    },
+                    FechaNacimiento: {
+                        required: true,
+                        maxDate: '@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")'
+                    }
+                },
+                messages: {
+                    Telefono: {
+                        required: "El teléfono es obligatorio",
+                        exactPhoneLength: "El teléfono debe tener 8 dígitos (ej: 60448095)"
+                    },
+                    FechaNacimiento: {
+                        maxDate: "Debes ser mayor de 18 años"
+                    }
+                },
+                submitHandler: function(form) {
+                    // Limpiar formato del teléfono antes de enviar
+                    var telefonoInput = $('#telefono');
+                    telefonoInput.val(telefonoInput.val().replace(/\s/g, ''));
+
+                    // Mostrar mensaje de éxito
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Registro exitoso',
+                        text: 'Su cuenta ha sido creada correctamente',
+                        timer: 3000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        form.submit();
+                    });
+                    return false;
+                },
+                errorPlacement: function(error, element) {
+                    if (element.attr("name") == "FechaNacimiento") {
+                        error.insertAfter(element.next());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+
+            // Validar edad mínima (18 años)
+            $.validator.addMethod("maxDate", function(value, element) {
+                if (!value) return true;
+                var maxDate = new Date('@DateTime.Now.AddYears(-18).ToString("yyyy-MM-dd")');
+                var inputDate = new Date(value);
+                return inputDate <= maxDate;
+            });
+        });
+    </script>
+</body>
+</html>

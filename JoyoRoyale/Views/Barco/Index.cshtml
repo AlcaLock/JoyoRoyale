@@ -1,0 +1,87 @@
+﻿@* @model List<Crucero.Application.DTOs.BarcosDTO>
+
+@{
+    ViewData["Title"] = "Barco";
+}
+
+@foreach (var barco in Model)
+{
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <img class="card-img-top"
+                     style="max-height:460px;"
+                     role="img"
+                     src="data:image/jpeg;charset=utf-8;base64,@Convert.ToBase64String(barco.Imagen)"
+                     alt="Imagen" />
+                <h5 class="card-title">@barco.Nombre</h5>
+                <p class="card-text">@barco.Descripcion</p>
+                <p class="card-text"><strong>Capacidad:</strong> @barco.Capacidad</p>
+
+                <p class="card-text">
+                    <strong>Total de Habitaciones:</strong>
+                    @if (barco.BarcoHabitaciones != null && barco.BarcoHabitaciones.Any())
+                    {
+                        @barco.BarcoHabitaciones.Sum(h => h.CantidadDisponible)
+                    }
+                    else
+                    {
+                        <span>0</span>
+                    }
+                </p>
+            </div>
+
+            <div class="card-body">
+                <a class="btn btn-primary" asp-action="Details" asp-route-id="@barco.Id">Detalles</a>
+            </div>
+        </div>
+    </div>
+} *@
+
+
+@model List<Crucero.Application.DTOs.BarcosDTO>
+
+@{
+    ViewData["Title"] = "Barcos";
+}
+
+<h1>Barcos Disponibles</h1>
+
+<p>
+  
+</p>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @foreach (var barco in Model)
+    {
+        <div class="col">
+            <div class="card shadow-sm">
+                <img class="card-img-top"
+                     style="max-height:460px;"
+                     role="img"
+                     src="data:image/jpeg;charset=utf-8;base64,@Convert.ToBase64String(barco.Imagen)"
+                     alt="Imagen del barco" />
+
+                <div class="card-body">
+                    <h5 class="card-title">@barco.Nombre</h5>
+                    <p class="card-text">@barco.Descripcion</p>
+
+                    <p class="card-text">
+                        <strong>Capacidad:</strong> @barco.Capacidad pasajeros
+                    </p>
+
+                    <p class="card-text">
+                        <strong>Total de Habitaciones:</strong>
+                        @(barco.BarcoHabitaciones?.Sum(h => h.CantidadDisponible) ?? 0)
+                    </p>
+                </div>
+
+                <div class="card-body">
+                    <a class="btn btn-primary" asp-action="Details" asp-route-id="@barco.Id">
+                        <i class="bi bi-eye"></i> Ver Detalles
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

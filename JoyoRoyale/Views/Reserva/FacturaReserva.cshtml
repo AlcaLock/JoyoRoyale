@@ -1,0 +1,177 @@
+﻿@model Crucero.Application.DTOs.ReservasDTO
+@{
+    Layout = null;
+    var fechaRegreso = Model.Crucero.FechasCruceros.First().FechaInicio.AddDays(Model.Crucero.Dias);
+    var subtotalHabitaciones = Model.ReservasHabitaciones.Sum(h => h.Habitacion.PreciosHabitaciones.First().Precio);
+    var subtotalComplementos = Model.ReservasComplementos.Sum(c => c.Total);
+    var subtotal = subtotalHabitaciones + subtotalComplementos;
+    var impuestos = subtotal * 0.13m;
+    var tasasPortuarias = subtotal * 0.05m;
+    var totalPagar = subtotal + impuestos + tasasPortuarias;
+    var estadoPago = Model.Total >= totalPagar ? "Pagado" : "Pendiente";
+    var montoPendiente = totalPagar - Model.Total;
+
+    decimal tipoCambio = 0;
+    decimal totalPagarDolares = 0;
+    decimal montoPendienteDolares = 0;
+
+    if (ViewData["TipoCambio"] is decimal tipo && tipo > 0)
+    {
+        tipoCambio = tipo;
+        totalPagarDolares = totalPagar / tipoCambio;
+        montoPendienteDolares = montoPendiente / tipoCambio;
+    }
+
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Factura de Reserva</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+            .header h2 {
+                color: #2a5885;
+            }
+
+        .logo {
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+            .table th {
+                background-color: #343a40;
+                color: white;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .table td {
+                padding: 8px;
+                border: 1px solid #ddd;
+            }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .total {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="@($"https://localhost:7226/imagenes/Logo.jpeg")" alt="Joyo royale" class="logo" />
+        <h2>Factura de Reserva</h2>
+        <p><strong>Fecha de Emisión:</strong> @DateTime.Now.ToShortDateString()</p>
+    </div>
+
+    <h4>Datos del Cliente</h4>
+    <p><strong>Nombre:</strong> @Model.Usuario.Nombre</p>
+    <p><strong>Correo:</strong> @Model.Usuario.Correo</p>
+    <p><strong>Teléfono:</strong> @Model.Usuario.Telefono</p>
+
+
+    <h4>Detalles de la Reserva</h4>
+    <p><strong>Crucero:</strong> @Model.Crucero.Nombre</p>
+    <p><strong>Puerto de Salida:</strong> @Model.Crucero.Itinerarios.OrderBy(i => i.Dia).First().Puerto.Nombre</p>
+    <p><strong>Puerto de Regreso:</strong> @Model.Crucero.Itinerarios.OrderBy(i => i.Dia).Last().Puerto.Nombre</p>
+    <p><strong>Fecha de Inicio:</strong> @Model.Crucero.FechasCruceros.First().FechaInicio.ToShortDateString()</p>
+    <p><strong>Fecha de Regreso:</strong> @fechaRegreso.ToShortDateString()</p>
+
+    <h4>Habitaciones Reservadas</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Habitación</th>
+                <th>Cantidad Reservada</th>
+                <th>Huéspedes Totales</th>
+                <th>Precio Unitario</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var grupo in Model.ReservasHabitaciones.GroupBy(h => h.Habitacion.Nombre))
+            {
+                var cantidadReservada = grupo.Count();
+                var totalPasajeros = grupo.Sum(h => h.CantidadPasajeros);
+                var precioUnitario = grupo.First().Habitacion.PreciosHabitaciones.First().Precio;
+                var totalHabitacion = cantidadReservada * precioUnitario;
+
+                <tr>
+                    <td>@grupo.Key</td>
+                    <td>@cantidadReservada</td>
+                    <td>@totalPasajeros</td>
+                    <td>₡@precioUnitario.ToString("N0")</td>
+                    <td>₡@totalHabitacion.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="text-end"><strong>Total Habitaciones:</strong> ₡@subtotalHabitaciones.ToString("N0")</p>
+
+    <h4>Complementos Adquiridos</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Complemento</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var comp in Model.ReservasComplementos)
+            {
+                <tr>
+                    <td>@comp.Complemento.Nombre</td>
+                    <td>@comp.Cantidad</td>
+                    <td>₡@comp.Total.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p class="text-end"><strong>Total Complementos:</strong> ₡@subtotalComplementos.ToString("N0")</p>
+
+    <hr />
+    <p class="text-end"><strong>Subtotal:</strong> ₡@subtotal.ToString("N0")</p>
+    <p class="text-end"><strong>Impuestos (13%):</strong> ₡@impuestos.ToString("N0")</p>
+    <p class="text-end"><strong>Tasa portuaria (5%):</strong> ₡@tasasPortuarias.ToString("N0")</p>
+    <h3 class="text-end total"><strong>Total a Pagar:</strong> ₡@totalPagar.ToString("N0") | $@totalPagarDolares.ToString("N2")</h3>
+
+    <h4>Estado de Pago</h4>
+    <p><strong>Estado:</strong> @estadoPago</p>
+    @if (estadoPago == "Pendiente")
+    {
+        <p><strong>Fecha Límite de Pago:</strong> @Model.Crucero.FechasCruceros.First().FechaLimitePago.ToShortDateString()</p>
+        <p><strong>Monto Pendiente:</strong> ₡@montoPendiente.ToString("N0") | $@montoPendienteDolares.ToString("N2")</p>
+    }
+
+    <div class="footer">
+        <p>Gracias por su reserva - JoyoRoyale.</p>
+    </div>
+</body>
+</html>

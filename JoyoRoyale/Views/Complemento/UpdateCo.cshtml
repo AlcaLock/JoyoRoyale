@@ -1,0 +1,68 @@
+﻿@model Crucero.Application.DTOs.ComplementosDTO
+
+@{
+    ViewData["Title"] = "Editar Complemento";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-edit mr-2"></i>Editar Complemento</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <!-- Campo ID oculto (no editable) -->
+                <input type="hidden" asp-for="Id" />
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Nombre" class="form-label font-weight-bold">Nombre del Complemento</label>
+                        <input asp-for="Nombre" class="form-control" required />
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Descripcion" class="form-label font-weight-bold">Descripción</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Precio" class="form-label font-weight-bold">Precio</label>
+                        <input asp-for="Precio" type="number" step="0.01" class="form-control" required />
+                        <span asp-validation-for="Precio" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="TipoAplicacion" class="form-label">Tipo de Aplicación</label>
+                        <select asp-for="TipoAplicacion" class="form-control" required>
+                            <option value="">Seleccione un tipo</option>
+                            <option value="Por camarote">Por camarote</option>
+                            <option value="Bar">Bar</option>
+                            <option value="Spa">Spa</option>
+                            <option value="Restaurante">Restaurante</option>
+                        </select>
+                        <span asp-validation-for="TipoAplicacion" class="text-danger"></span>
+                    </div>
+
+                <div class="col-12">
+                    <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        <a asp-action="IndexAdmin" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left mr-2"></i>Volver al Listado
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

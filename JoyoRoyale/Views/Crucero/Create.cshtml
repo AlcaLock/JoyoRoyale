@@ -1,0 +1,254 @@
+﻿@model Crucero.Application.DTOs.CrucerosDTO
+
+@{
+    ViewData["Title"] = "Crear Crucero";
+    var puertosJson = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Puertos);
+    var barcosJson = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Barcos, new Newtonsoft.Json.JsonSerializerSettings
+            {
+                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            });
+
+}
+
+
+<h1 class="mb-4">Crear Nuevo Crucero</h1>
+<hr />
+<div class="row justify-content-center">
+   
+
+    <form id="cruceroForm" asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Nombre" class="form-label fw-bold">Nombre del Crucero</label>
+                <input asp-for="Nombre" class="form-control" placeholder="Ingrese el nombre" required />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Descripcion" class="form-label fw-bold">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Ingrese una descripción" required></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">Imagen del Crucero</label>
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Dias" class="form-label fw-bold">Duración (Días)</label>
+                <input asp-for="Dias" type="number" class="form-control" id="diasInput" placeholder="Ingrese la cantidad de días" required />
+                <span asp-validation-for="Dias" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="BarcoId" class="form-label fw-bold">Seleccione un Barco</label>
+                <select asp-for="BarcoId" class="form-select" id="barcoSelect" required>
+                    <option value="">Seleccione un barco...</option>
+                    @foreach (var barco in ViewBag.Barcos)
+                    {
+                        <option value="@barco.Id">@barco.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="BarcoId" class="text-danger"></span>
+            </div>
+
+            <h3>Itinerario</h3>
+            <div id="itinerario-container"></div>
+
+            <h3>Fechas y Precios</h3>
+            <div id="fechas-container">
+                <button type="button" class="btn btn-success mb-2" onclick="agregarFecha()">Agregar Fecha</button>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">Volver a la Lista</a>
+                <button type="submit" class="btn btn-primary">Crear Crucero</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        let puertos = @Html.Raw(puertosJson);
+        let barcos = @Html.Raw(barcosJson);
+        let habitaciones = {}; // Almacenar las habitaciones por barco
+
+        document.getElementById("diasInput").addEventListener("input", function () {
+            generarItinerario(parseInt(this.value));
+        });
+
+        document.getElementById("barcoSelect").addEventListener("change", function () {
+            cargarHabitaciones(this.value);
+        });
+
+        function generarItinerario(dias) {
+            const container = document.getElementById("itinerario-container");
+            container.innerHTML = "";
+            for (let i = 0; i < dias; i++) {
+                let opcionesPuertos = puertos.map(p => `<option value="${p.Id}">${p.Nombre}</option>`).join('');
+                container.innerHTML += `
+                    <div class="itinerario-item mb-3 border p-3">
+                        <div class="row">
+                            <div class="col-md-1">
+                                <label class="form-label">Día</label>
+                                <input type="number" class="form-control" value="${i + 1}" readonly name="Itinerarios[${i}].Dia">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Puerto</label>
+                                <select class="form-select" name="Itinerarios[${i}].PuertoId" required>
+                                    <option value="">Seleccione...</option>
+                                    ${opcionesPuertos}
+                                </select>
+                                <span asp-validation-for="Itinerarios[${i}].PuertoId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Descripción</label>
+                                <input type="text" class="form-control" name="Itinerarios[${i}].Descripcion" required>
+                                <span asp-validation-for="Itinerarios[${i}].Descripcion" class="text-danger"></span>
+                            </div>
+                            <input type="hidden" name="Itinerarios[${i}].CruceroId" value="0">
+                        </div>
+                    </div>`;
+            }
+        }
+
+
+
+        function agregarFecha() {
+            const container = document.getElementById("fechas-container");
+            const items = document.querySelectorAll('.fecha-item');
+            const index = items.length;
+
+            const div = document.createElement("div");
+            div.classList.add("fecha-item", "mb-3", "border", "p-3");
+            div.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control fecha-inicio" name="FechasCruceros[${index}].FechaInicio" required onchange="actualizarFechaLimite(this)">
+                        <span asp-validation-for="FechaInicio" class="text-danger"></span>
+                               </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha Límite</label>
+                        <input type="date" class="form-control fecha-limite" name="FechasCruceros[${index}].FechaLimitePago" required readonly>
+                    </div>
+                            <input type="hidden" name="FechasCruceros[${index}].Id" value="0">
+
+        <input type="hidden" name="FechasCruceros[${index}].CruceroId" value="0">
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger" onclick="eliminarFecha(this)">Eliminar</button>
+                    </div>
+                </div>
+                <div class="habitaciones-container mt-3">
+                    <h5>Precios por Habitación</h5>
+                    <div id="habitaciones-fecha-${index}">Seleccione un barco para cargar las habitaciones.</div>
+                </div>`;
+            container.appendChild(div);
+
+            actualizarHabitacionesFecha(index);
+        }
+
+        function eliminarFecha(btn) {
+            btn.closest('.fecha-item').remove();
+        }
+
+        function actualizarFechaLimite(input) {
+            let fechaInicio = new Date(input.value);
+            if (isNaN(fechaInicio)) return;
+
+            let fechaLimite = new Date(fechaInicio);
+            fechaLimite.setDate(fechaLimite.getDate() - 3);
+
+            let fechaLimiteInput = input.closest('.row').querySelector('.fecha-limite');
+            fechaLimiteInput.value = fechaLimite.toISOString().split('T')[0];
+        }
+
+        async function cargarHabitaciones(barcoId) {
+            if (!barcoId) return;
+
+
+
+            try {
+                const response = await fetch(`/Habitacion/GetByBarco?barcoId=${barcoId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                console.log("Habitaciones recibidas:", data);
+                habitaciones[barcoId] = data;
+                actualizarTodasLasFechas(barcoId);
+            } catch (error) {
+                console.error("Error al cargar habitaciones", error);
+            }
+        }
+
+        function actualizarTodasLasFechas(barcoId) {
+            document.querySelectorAll('.fecha-item').forEach((item, index) => {
+                actualizarHabitacionesFecha(index);
+            });
+        }
+
+                     function actualizarHabitacionesFecha(index) {
+            const barcoId = document.getElementById("barcoSelect").value;
+            const habitacionesContainer = document.getElementById(`habitaciones-fecha-${index}`);
+
+                    // Evita duplicaciones limpiando el contenedor antes de agregar elementos
+        habitacionesContainer.innerHTML = "";
+
+            if (!habitaciones[barcoId] || habitaciones[barcoId].length === 0) {
+                habitacionesContainer.innerHTML = "No hay habitaciones disponibles.";
+                return;
+            }
+
+            habitacionesContainer.innerHTML = habitaciones[barcoId].map((h, idx) =>
+                `<div class="mb-2">
+                    <label class="form-label">${h.nombre || 'Sin nombre'}</label>
+                    <input type="hidden" name="FechasCruceros[${index}].PreciosHabitaciones[${idx}].Id" value="0">
+                    <input type="hidden" name="FechasCruceros[${index}].PreciosHabitaciones[${idx}].HabitacionId" value="${h.id}">
+                    <input type="hidden" name="FechasCruceros[${index}].PreciosHabitaciones[${idx}].FechaCruceroId" value="${index}"> 
+                    <input type="number" class="form-control mt-1" name="FechasCruceros[${index}].PreciosHabitaciones[${idx}].Precio" placeholder="Precio" required>
+                </div>`
+            ).join('');
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let dias = document.getElementById("diasInput").value;
+            if (dias) {
+                generarItinerario(parseInt(dias));
+            }
+        });
+
+
+         var errores = @Html.Raw(Json.Serialize(TempData["ErrorMessages"]));
+        if (errores) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Errores encontrados',
+                html: errores.replace(/\|/g, '<br>'), // Reemplaza "|" por saltos de línea
+            });
+        }
+
+        var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+        if (mensaje) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje
+            });
+        }
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+
+

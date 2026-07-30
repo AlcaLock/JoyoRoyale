@@ -1,0 +1,128 @@
+﻿@model Crucero.Application.DTOs.BarcosDTO
+
+@{
+    ViewData["Title"] = "Crear Barco";
+}
+
+<h1>Registrar Barco</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <!-- Agregar enctype -->
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Nombre -->
+            <div class="form-group">
+                <label asp-for="Nombre" class="control-label"></label>
+                <input asp-for="Nombre" class="form-control" placeholder="Nombre del barco" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group">
+                <label asp-for="Descripcion" class="control-label"></label>
+                <textarea asp-for="Descripcion" class="form-control" placeholder="Descripción del barco"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+
+            <!-- Capacidad -->
+            <div class="form-group">
+                <label asp-for="Capacidad" class="control-label"></label>
+                <input asp-for="Capacidad" type="number" class="form-control" placeholder="Capacidad de huéspedes" />
+                <span asp-validation-for="Capacidad" class="text-danger"></span>
+            </div>
+
+            <!-- Imagen -->
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Imagen</label>
+                    <input type="file" class="form-control" name="imageFile" id="imageFile" accept="image/*" required />
+                    <span asp-validation-for="Imagen" class="text-danger"></span>
+                </div>
+
+                <!-- Vista previa de la imagen antes de subir -->
+                <div class="mt-3">
+                    <img id="imagePreview" src="#" alt="Vista previa" class="img-thumbnail d-none" width="250">
+                </div>
+            </div>
+
+            <!-- Habitaciones Disponibles -->
+            <h4 class="mt-4">Habitaciones Disponibles</h4>
+            <p>Selecciona los tipos de habitaciones y su cantidad.</p>
+
+            <div class="form-group">
+                <div class="row">
+                    @foreach (var habitacion in ViewBag.Habitaciones)
+                    {
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input habitacion-checkbox" id="hab_@habitacion.Id" name="HabitacionIds" value="@habitacion.Id" />
+                                <label class="form-check-label" for="hab_@habitacion.Id">@habitacion.Nombre</label>
+                            </div>
+                            <input type="number" name="Cantidades" class="form-control cantidad-input mt-1" placeholder="Cantidad disponible" min="1" disabled />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Botón de envío -->
+            <div class="form-group mt-3">
+                <button type="submit" class="btn btn-primary">Registrar Barco</button>
+                <a asp-action="IndexAdmin" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let checkboxes = document.querySelectorAll(".habitacion-checkbox");
+            let cantidadInputs = document.querySelectorAll(".cantidad-input");
+
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.addEventListener("change", function () {
+                    cantidadInputs[index].disabled = !checkbox.checked;
+                    if (!checkbox.checked) cantidadInputs[index].value = "";
+                });
+            });
+
+            // Funcionalidad para la vista previa de la imagen
+            document.getElementById('imageFile').addEventListener('change', function (event) {
+                const reader = new FileReader();
+                reader.onload = function () {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = reader.result;
+                    preview.classList.remove('d-none');
+                };
+                reader.readAsDataURL(event.target.files[0]);
+            });
+
+
+             var errores = @Html.Raw(Json.Serialize(TempData["ErrorMessages"]));
+        if (errores) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Errores encontrados',
+                html: errores.replace(/\|/g, '<br>'), 
+            });
+        }
+
+        var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+        if (mensaje) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje
+            });
+        }
+
+        }); 
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

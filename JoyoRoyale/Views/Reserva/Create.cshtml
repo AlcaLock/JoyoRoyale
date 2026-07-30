@@ -1,0 +1,1026 @@
+﻿@Html.AntiForgeryToken()
+@using Crucero.Application.DTOs
+@model Crucero.Application.DTOs.ReservasDTO
+
+<div class="row">
+    <!-- Formulario principal -->
+    <div class="col-lg-8">
+        <!-- Paso 1: Selección de crucero -->
+        <div class="card mb-4" id="step1">
+            <div class="card-header bg-primary text-white">
+                <h5>1. Seleccione el Crucero</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var crucero in ViewBag.Cruceros as List<CrucerosDTO>)
+                    {
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <img src="data:image/jpeg;base64,@Convert.ToBase64String(crucero.Imagen)" class="card-img-top" alt="@crucero.Nombre">
+                                <div class="card-body">
+                                    <h5 class="card-title">@crucero.Nombre</h5>
+                                    <p class="card-text">@crucero.Descripcion</p>
+                                    <p class="card-text"><small>Duración: @crucero.Dias días</small></p>
+                                    <button type="button" class="btn btn-primary select-crucero"
+                                            data-crucero-id="@crucero.Id"
+                                            data-nombre="@crucero.Nombre"
+                                            data-dias="@crucero.Dias">
+                                        Seleccionar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Paso 2: Selección de fecha (oculto inicialmente) -->
+        <div class="card mb-4" id="step2-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>2. Seleccione la Fecha de Viaje</h5>
+            </div>
+            <div class="card-body">
+                <div id="fechas-container" class="row"></div>
+            </div>
+        </div>
+
+        <!-- Paso 3: Especificar cantidades (oculto inicialmente) -->
+        <div class="card mb-4" id="step3-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>3. Especifique Cantidades</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Cantidad de Habitaciones:</label>
+                            <input type="number" min="1" class="form-control" id="cantidadHabitaciones" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Total de Pasajeros:</label>
+                            <input type="number" min="1" class="form-control" id="cantidadPasajeros" required>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary mt-3" id="btnContinuarHabitaciones">Continuar</button>
+            </div>
+        </div>
+
+        <!-- Paso 4: Selección de habitaciones (oculto inicialmente) -->
+        <div class="card mb-4" id="step4-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>4. Seleccione las Habitaciones</h5>
+            </div>
+            <div class="card-body" id="habitaciones-container"></div>
+            <div class="card-footer">
+                <button type="button" class="btn btn-warning" id="btnValidarDisponibilidad">Validar Disponibilidad</button>
+                <button type="button" class="btn btn-primary float-end" id="btnContinuarHuespedes" style="display: none;">Continuar a Huéspedes</button>
+            </div>
+        </div>
+
+        <!-- Paso 5: Huéspedes (oculto inicialmente) -->
+        <div class="card mb-4" id="step5-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>5. Información de los Huéspedes</h5>
+            </div>
+            <div class="card-body" id="huespedes-container"></div>
+            <div class="card-footer">
+                <button type="button" class="btn btn-primary float-end" id="btnContinuarComplementos">Continuar a Complementos</button>
+            </div>
+        </div>
+
+        <!-- Paso 6: Complementos (oculto inicialmente) -->
+        <div class="card mb-4" id="step6-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>6. Complementos (Opcional)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="complementos-container">
+                    @foreach (var complemento in ViewBag.Complementos as List<ComplementosDTO>)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">@complemento.Nombre</h5>
+                                    <p class="card-text">@complemento.Descripcion</p>
+                                    <p class="card-text">Precio: @complemento.Precio.ToString("C")</p>
+                                    <div class="form-group">
+                                        <label>Cantidad:</label>
+                                        <input type="number" min="0" class="form-control complemento-cantidad"
+                                               data-complemento-id="@complemento.Id"
+                                               data-precio="@complemento.Precio"
+                                               data-nombre="@complemento.Nombre"
+                                               value="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="button" id="btnContinuarResumen" class="btn btn-primary mt-3">Continuar al Resumen</button>
+            </div>
+        </div>
+
+        <div id="mensajeResumen" class="alert alert-info mt-3" style="display: none;"></div>
+
+        <!-- Paso 7: Pago (oculto inicialmente) -->
+        <div class="card mb-4" id="step7-container" style="display: none;">
+            <div class="card-header bg-primary text-white">
+                <h5>7. Información de Pago</h5>
+            </div>
+            <div class="card-body">
+                <!-- Información del usuario -->
+                <div class="mb-4">
+                    <h6>Usuario</h6>
+                    <div class="ps-3">
+                        <p id="usuario-nombre">Cargando información...</p>
+                        <p id="usuario-email">Cargando información...</p>
+                    </div>
+                </div>
+
+                <!-- Información de fecha límite (oculta inicialmente) -->
+                <div class="alert alert-info mb-3" id="info-fecha-limite" style="display: none;">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    <strong>Fecha límite para pago completo:</strong>
+                    <span id="fecha-limite-texto"></span>
+                </div>
+
+                <!-- Opciones de pago -->
+                <div class="mb-4">
+                    <h6>Opciones de pago</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="opcionPago" id="pagoTotal" value="total" checked>
+                        <label class="form-check-label" for="pagoTotal">
+                            Pagar saldo total (<span id="monto-total"></span>)
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="opcionPago" id="pagoDeposito" value="deposito">
+                        <label class="form-check-label" for="pagoDeposito">
+                            Pagar depósito mínimo (50%: <span id="monto-deposito"></span>)
+                        </label>
+                    </div>
+                    <div id="info-deposito" class="alert alert-warning mt-2" style="display: none;">
+                        <small>
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Deberá pagar el saldo restante (<span id="monto-restante"></span>) antes del
+                            <span id="fecha-limite-pago"></span>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Datos de tarjeta -->
+                <div class="mb-3">
+                    <h6>Datos de tarjeta de crédito</h6>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="tarjetaNumero" class="form-label">Número de tarjeta</label>
+                            <input type="text" class="form-control" id="tarjetaNumero" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                            <div class="invalid-feedback">Por favor ingrese un número de tarjeta válido (16 dígitos)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tarjetaExpiracion" class="form-label">Fecha de expiración</label>
+                            <input type="text" class="form-control" id="tarjetaExpiracion" placeholder="MM/AA" maxlength="5" required>
+                            <div class="invalid-feedback">Formato MM/AA requerido</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tarjetaCVV" class="form-label">Código de seguridad (CVV)</label>
+                            <input type="password" class="form-control" id="tarjetaCVV" placeholder="123" maxlength="3" required>
+                            <div class="invalid-feedback">Código de 3 dígitos requerido</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="tarjetaTitular" class="form-label">Nombre del titular</label>
+                            <input type="text" class="form-control" id="tarjetaTitular" placeholder="Como aparece en la tarjeta" required>
+                            <div class="invalid-feedback">Ingrese el nombre como aparece en la tarjeta</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-secondary" id="btnVolverResumen">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al resumen
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnProcesarPago">
+                        <i class="bi bi-credit-card me-2"></i>Procesar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Panel de resumen -->
+
+    <div class="col-lg-4">
+        <div id="resumen-container">
+            <!-- El resumen se generará aquí dinámicamente -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+            let currentStep = 1;
+            let cruceroSeleccionado = null;
+            let fechaSeleccionada = null;
+            let habitacionesSeleccionadas = [];
+            let complementosSeleccionados = [];
+            const usuarioId = @ViewBag.UsuarioId;
+
+                                function calcularTotal() {
+            const subtotalHabitaciones = habitacionesSeleccionadas.reduce((acc, hab) => acc + (hab.precio * hab.cantidad), 0);
+            const subtotalComplementos = complementosSeleccionados.reduce((acc, comp) => acc + (comp.precio * comp.cantidad), 0);
+            const subtotal = subtotalHabitaciones + subtotalComplementos;
+            const impuestos = subtotal * 0.13;
+            const tasasPortuarias = subtotal * 0.05;
+            return subtotal + impuestos + tasasPortuarias;
+        }
+
+
+        $(document).ready(function() {
+
+                    // Paso 1: Selección de crucero (versión actualizada)
+        $(document).on('click', '.select-crucero', function() {
+            const cruceroId = $(this).data('crucero-id');
+
+            // Obtener los puertos via AJAX
+            Promise.all([
+                $.get(`/Reserva/GetNombrePuertoSalidaAsync?cruceroId=${cruceroId}`),
+                $.get(`/Reserva/GetNombrePuertoRegresoAsync?cruceroId=${cruceroId}`),
+                $.get(`/Reserva/GetFechasDisponibles?cruceroId=${cruceroId}`)
+            ]).then(function([puertoSalida, puertoRegreso, fechas]) {
+                cruceroSeleccionado = {
+                    id: cruceroId,
+                    nombre: $(this).data('nombre'),
+                    dias: $(this).data('dias'),
+                    primerPuerto: puertoSalida,
+                    ultimoPuerto: puertoRegreso
+                };
+
+                if (!fechas || fechas.length === 0) {
+                    alert('No hay fechas disponibles');
+                    return;
+                }
+
+                $('#fechas-container').empty();
+                fechas.forEach(fecha => {
+                    $('#fechas-container').append(`
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${new Date(fecha.fechaInicio).toLocaleDateString()}</h5>
+                                    <button class="btn btn-primary select-fecha"
+                                            data-fecha-id="${fecha.id}"
+                                            data-fecha-inicio="${fecha.fechaInicio}">
+                                        Seleccionar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+
+                $('#step1').hide();
+                $('#step2-container').show();
+                currentStep = 2;
+                updateResumen();
+            }.bind(this)).fail(function() {
+                alert('Error al cargar la información del crucero');
+            });
+        });
+
+            // Paso 2: Selección de fecha (sin cambios)
+            $(document).on('click', '.select-fecha', function() {
+                fechaSeleccionada = {
+                    id: $(this).data('fecha-id'),
+                    inicio: $(this).data('fecha-inicio')
+                };
+
+                $('#step2-container').hide();
+                $('#step3-container').show();
+                currentStep = 3;
+                updateResumen();
+            });
+
+            // Paso 3: Continuar a habitaciones (sin cambios)
+        $('#btnContinuarHabitaciones').click(function() {
+            const cantidadTotalPasajeros = parseInt($('#cantidadPasajeros').val());
+
+            if (isNaN(cantidadTotalPasajeros) || cantidadTotalPasajeros < 1) {
+                       Swal.fire({
+            icon: 'info',
+            title: 'Cantidad inválida',
+            text: 'Ingrese una cantidad válida de pasajeros',
+            confirmButtonText: 'Entendido'
+        });
+                return;
+            }
+
+            $.get(`/Reserva/GetHabitacionesDisponibles?cruceroId=${cruceroSeleccionado.id}&fechaCruceroId=${fechaSeleccionada.id}`, function(habitaciones) {
+                $('#habitaciones-container').empty();
+                habitaciones.forEach(hab => {
+                    $('#habitaciones-container').append(`
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5>${hab.habitacion.nombre}</h5>
+                                <p>Capacidad: ${hab.habitacion.capacidadMinima}-${hab.habitacion.capacidadMaxima} pasajeros</p>
+                                <p>Disponibles: ${hab.cantidadDisponible}</p>
+                                <p>Precio: ₡${hab.precio.toFixed(2)}</p>
+
+                                <div class="mb-2">
+                                    <label>Cantidad de habitaciones:</label>
+                                    <input type="number" class="form-control cantidad-habitacion"
+                                           data-habitacion-id="${hab.habitacion.id}"
+                                           data-precio="${hab.precio}"
+                                           data-min-capacity="${hab.habitacion.capacidadMinima}"
+                                           data-max-capacity="${hab.habitacion.capacidadMaxima}"
+                                           min="0" max="${hab.cantidadDisponible}"
+                                           value="0">
+                                </div>
+
+                                <div class="mb-2 pasajeros-por-habitacion" style="display:none;">
+                                    <label>Pasajeros por habitación:</label>
+                                    <input type="number" class="form-control cantidad-pasajeros"
+                                           data-habitacion-id="${hab.habitacion.id}"
+                                           min="${hab.habitacion.capacidadMinima}"
+                                           max="${hab.habitacion.capacidadMaxima}"
+                                           value="${hab.habitacion.capacidadMinima}">
+                                    <small class="text-muted">Mínimo ${hab.habitacion.capacidadMinima}, máximo ${hab.habitacion.capacidadMaxima}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+
+                // Mostrar campos de pasajeros cuando se selecciona al menos 1 habitación
+                $(document).on('change', '.cantidad-habitacion', function() {
+                    const cantidad = parseInt($(this).val());
+                    const pasajerosContainer = $(this).closest('.card-body').find('.pasajeros-por-habitacion');
+
+                    if (cantidad > 0) {
+                        pasajerosContainer.show();
+                    } else {
+                        pasajerosContainer.hide();
+                    }
+                });
+
+                $('#step3-container').hide();
+                $('#step4-container').show();
+                currentStep = 4;
+                updateResumen();
+            });
+        });
+
+        // Paso 4: Validar disponibilidad 
+               $('#btnValidarDisponibilidad').click(function() {
+            const cantidadTotalPasajeros = parseInt($('#cantidadPasajeros').val());
+            let totalPasajerosHabitaciones = 0;
+            habitacionesSeleccionadas = [];
+            const habitacionesRequest = {}; // Dictionary<int, int> para el backend
+
+            $('.cantidad-habitacion').each(function() {
+                const cantidadHabitaciones = parseInt($(this).val());
+                if (cantidadHabitaciones > 0) {
+                    const habId = $(this).data('habitacion-id');
+                    const pasajerosPorHab = parseInt($(this).closest('.card-body').find('.cantidad-pasajeros').val());
+                    const minCapacity = $(this).data('min-capacity');
+                    const maxCapacity = $(this).data('max-capacity');
+
+                    // Validar capacidad por habitación
+                    if (pasajerosPorHab < minCapacity || pasajerosPorHab > maxCapacity) {
+                               Swal.fire({
+            icon: 'warning',
+            title: 'Capacidad inválida',
+            text: `La habitación ${nombreHabitacion} debe tener entre ${minCapacity} y ${maxCapacity} pasajeros`,
+            confirmButtonText: 'Entendido'
+        });
+                        return false;
+                    }
+
+                    totalPasajerosHabitaciones += cantidadHabitaciones * pasajerosPorHab;
+
+                    // Guardamos toda la info para usar después
+                    habitacionesSeleccionadas.push({
+                        id: habId,
+                        nombre: $(this).closest('.card-body').find('h5').text(),
+                        precio: parseFloat($(this).data('precio')),
+                        cantidad: cantidadHabitaciones,
+                        pasajerosPorHab: pasajerosPorHab,
+                        capacidadMinima: minCapacity,
+                        capacidadMaxima: maxCapacity
+                    });
+
+                    // Solo enviamos la cantidad al backend (Dictionary<int, int>)
+                    habitacionesRequest[habId] = cantidadHabitaciones;
+                }
+            });
+
+            // Validaciones (se mantienen igual)
+            if (totalPasajerosHabitaciones > cantidadTotalPasajeros) {
+                    Swal.fire({
+            icon: 'warning',
+            title: 'Pasajeros excedidos',
+            text: `La cantidad total de pasajeros en las habitaciones (${totalPasajerosHabitaciones}) excede la cantidad especificada (${cantidadTotalPasajeros})`,
+            confirmButtonText: 'Entendido'
+        });                return;
+            }
+
+            if (habitacionesSeleccionadas.length === 0) {
+                    Swal.fire({
+            icon: 'info',
+            title: 'Habitación no seleccionada',
+            text: 'Debe seleccionar al menos una habitación',
+            confirmButtonText: 'Ok'
+        });
+                return;
+            }
+
+            // Envío al backend
+            $.ajax({
+                url: `/Reserva/VerificarDisponibilidad?cruceroId=${cruceroSeleccionado.id}&fechaCruceroId=${fechaSeleccionada.id}`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(habitacionesRequest),
+                success: function(resultado) {
+                    // Verificar disponibilidad
+                    const habitacionesSinStock = [];
+                    for (const habId in resultado) {
+                        if (resultado[habId] < 0) {
+                            const hab = habitacionesSeleccionadas.find(h => h.id == habId);
+                            if (hab) habitacionesSinStock.push(hab.nombre);
+                        }
+                    }
+
+                    if (habitacionesSinStock.length > 0) {
+                              Swal.fire({
+            icon: 'error',
+            title: 'Sin disponibilidad',
+            text: `No hay disponibilidad suficiente para: ${habitacionesSinStock.join(', ')}`,
+            confirmButtonText: 'Entendido'
+        });
+                        return;
+                    }
+
+                    $('#btnContinuarHuespedes').show();
+                    updateResumen();
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                            Swal.fire({
+            icon: 'error',
+            title: 'Error al verificar disponibilidad',
+            text: xhr.responseJSON ? xhr.responseJSON : xhr.statusText,
+            confirmButtonText: 'Cerrar'
+        });
+                }
+            });
+        });
+
+            // Paso 5: Generar formularios de huéspedes (sin cambios)
+            $('#btnContinuarHuespedes').click(function() {
+                const cantidadPasajeros = $('#cantidadPasajeros').val();
+                $('#huespedes-container').empty();
+
+                for (let i = 1; i <= cantidadPasajeros; i++) {
+               $('#huespedes-container').append(`
+            <div class="mb-3">
+                <h6>Huésped ${i}</h6>
+
+                <input type="text" class="form-control mb-2" placeholder="Nombre" name="nombre_${i}" required>
+                <div class="invalid-feedback">El nombre debe tener al menos 3 caracteres.</div>
+
+                <input type="text" class="form-control mb-2" placeholder="Apellidos" name="apellidos_${i}" required>
+                <div class="invalid-feedback">Los apellidos deben tener al menos 3 caracteres.</div>
+
+                <input type="number" class="form-control mb-2" placeholder="Edad" name="edad_${i}" min="0" required>
+                <div class="invalid-feedback">Ingrese una edad válida entre 0 y 120 años.</div>
+
+                <input type="text" class="form-control mb-2" placeholder="Documento de Identidad" name="doc_identidad_${i}" required>
+                <div class="invalid-feedback">El documento debe tener al menos 9 caracteres.</div>
+
+                <input type="tel" class="form-control mb-2" placeholder="Teléfono" name="telefono_${i}" required>
+                <div class="invalid-feedback">El teléfono debe tener al menos 8 dígitos numéricos.</div>
+            </div>
+        `);
+
+                }
+
+                $('#step4-container').hide();
+                $('#step5-container').show();
+                currentStep = 5;
+                updateResumen();
+            });
+
+            // Paso 5: Continuar a complementos
+                   $('#btnContinuarComplementos').click(function () {
+            let isValid = true;
+
+            $('#huespedes-container input').each(function () {
+                const $input = $(this);
+                const valor = $input.val().trim();
+                const name = $input.attr('name');
+
+                // Reinicia el estado
+                $input.removeClass('is-invalid');
+
+                // Validación general vacía
+                if (!valor) {
+                    $input.addClass('is-invalid');
+                    isValid = false;
+                    return;
+                }
+
+                // Validaciones específicas
+                if (name.startsWith('nombre_') || name.startsWith('apellidos_')) {
+                    if (valor.length < 3) {
+                        $input.addClass('is-invalid');
+                        isValid = false;
+                    }
+                } else if (name.startsWith('edad_')) {
+                    const edad = parseInt(valor);
+                    if (isNaN(edad) || edad < 0 || edad > 120) {
+                        $input.addClass('is-invalid');
+                        isValid = false;
+                    }
+                } else if (name.startsWith('doc_identidad_')) {
+                    if (valor.length < 9) {
+                        $input.addClass('is-invalid');
+                        isValid = false;
+                    }
+                } else if (name.startsWith('telefono_')) {
+                    const soloNumeros = /^\d+$/;
+                    if (!soloNumeros.test(valor) || valor.length < 8) {
+                        $input.addClass('is-invalid');
+                        isValid = false;
+                    }
+                }
+            });
+
+            if (!isValid) {
+                // Ya no mostramos alerta global, cada campo tiene su feedback
+                return;
+            }
+
+            $('#step5-container').hide();
+            $('#step6-container').show();
+            currentStep = 6;
+            updateResumen();
+        });
+
+
+
+
+
+            // Paso 6: Complementos (actualizado para capturar nombres de complementos)
+            $('#btnContinuarResumen').click(function() {
+                complementosSeleccionados = [];
+                $('.complemento-cantidad').each(function() {
+                    const cantidad = parseInt($(this).val());
+                    if (cantidad > 0) {
+                        complementosSeleccionados.push({
+                            id: $(this).data('complemento-id'),
+                            nombre: $(this).data('nombre'),
+                            precio: parseFloat($(this).data('precio')),
+                            cantidad: cantidad
+                        });
+                    }
+                });
+        $('#step6-container').hide();
+
+        // Mostrar mensaje informativo en el contenedor de resumen
+        $('#mensajeResumen')
+            .html('Por favor, diríjase a la sección de <strong>Resumen</strong>. Allí encontrará el botón para realizar el pago.')
+            .fadeIn();
+
+        // Actualizar resumen
+        updateResumen(true);
+
+                updateResumen(true);
+            });
+
+        function updateResumen(final = false) {
+            const resumenContainer = $('#resumen-container');
+            let html = `
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">RESUMEN DE RESERVA</h5>
+                    </div>
+                    <div class="card-body">
+            `;
+
+            // 1. Información del Crucero
+            if (cruceroSeleccionado) {
+                html += `
+                    <div class="mb-3">
+                        <h6>${cruceroSeleccionado.nombre}</h6>
+                        <div class="ps-3">
+                            <small class="text-muted">Puerto de salida:</small>
+                            <p>${cruceroSeleccionado.primerPuerto}</p>
+                            <small class="text-muted">Puerto de regreso:</small>
+                            <p>${cruceroSeleccionado.ultimoPuerto}</p>
+                        </div>
+                    </div>`;
+            } else {
+                html += `<div class="alert alert-info py-2"><small>Seleccione un crucero</small></div>`;
+            }
+
+            // 2. Fechas del Viaje
+            if (fechaSeleccionada) {
+                const fechaInicio = new Date(fechaSeleccionada.inicio);
+                const fechaFin = new Date(fechaInicio);
+                fechaFin.setDate(fechaInicio.getDate() + cruceroSeleccionado.dias);
+
+                html += `
+                    <div class="mb-3">
+                        <div class="ps-3">
+                            <small class="text-muted">Fecha de inicio:</small>
+                            <p>${fechaInicio.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                            <small class="text-muted">Fecha de regreso:</small>
+                            <p>${fechaFin.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                        </div>
+                    </div>`;
+            } else if (cruceroSeleccionado) {
+                html += `<div class="alert alert-info py-2"><small>Seleccione una fecha</small></div>`;
+            }
+
+            // 3. Detalle de Habitaciones
+            if (habitacionesSeleccionadas.length > 0) {
+                let totalHabitaciones = 0;
+
+                html += `
+                    <div class="mb-3">
+                        <h6>Habitaciones</h6>
+                        <div class="ps-3">`;
+
+                // Agrupamos por tipo de habitación
+                const habitacionesAgrupadas = {};
+                habitacionesSeleccionadas.forEach(hab => {
+                    if (!habitacionesAgrupadas[hab.id]) {
+                        habitacionesAgrupadas[hab.id] = {
+                            nombre: hab.nombre,
+                            cantidad: 0,
+                            precio: hab.precio,
+                            total: 0
+                        };
+                    }
+                    habitacionesAgrupadas[hab.id].cantidad += hab.cantidad;
+                    habitacionesAgrupadas[hab.id].total += (hab.precio * hab.cantidad);
+                    totalHabitaciones += (hab.precio * hab.cantidad);
+                });
+
+                // Mostramos cada tipo de habitación
+                Object.values(habitacionesAgrupadas).forEach(hab => {
+                    html += `
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span><strong>${hab.nombre}</strong></span>
+                                <span>${hab.cantidad} ${hab.cantidad > 1 ? 'unidades' : 'unidad'}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="ps-3">${hab.cantidad} x ₡${hab.precio.toFixed(2)}</span>
+                                <span>₡${hab.total.toFixed(2)}</span>
+                            </div>
+                        </div>`;
+                });
+
+                // Total Habitaciones
+                html += `
+                        <div class="border-top pt-2 mt-2">
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total Habitaciones:</span>
+                                <span>₡${totalHabitaciones.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            } else if (cruceroSeleccionado && fechaSeleccionada) {
+                html += `<div class="alert alert-info py-2"><small>Seleccione habitaciones</small></div>`;
+            }
+
+            // 4. Detalle de Complementos
+            if (complementosSeleccionados.length > 0) {
+                let totalComplementos = 0;
+
+                html += `
+                    <div class="mb-3">
+                        <h6>Complementos</h6>
+                        <div class="ps-3">`;
+
+                complementosSeleccionados.forEach(comp => {
+                    const subtotal = comp.precio * comp.cantidad;
+                    totalComplementos += subtotal;
+
+                    html += `
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span><strong>${comp.nombre}</strong></span>
+                                <span>${comp.cantidad} ${comp.cantidad > 1 ? 'unidades' : 'unidad'}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="ps-3">${comp.cantidad} x ₡${comp.precio.toFixed(2)}</span>
+                                <span>₡${subtotal.toFixed(2)}</span>
+                            </div>
+                        </div>`;
+                });
+
+                // Total Complementos
+                html += `
+                        <div class="border-top pt-2 mt-2">
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total Complementos:</span>
+                                <span>₡${totalComplementos.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+
+            // 5. Cálculos Finales
+            const subtotalHabitaciones = habitacionesSeleccionadas.reduce((acc, hab) => acc + (hab.precio * hab.cantidad), 0);
+            const subtotalComplementos = complementosSeleccionados.reduce((acc, comp) => acc + (comp.precio * comp.cantidad), 0);
+            const subtotal = subtotalHabitaciones + subtotalComplementos;
+            const impuestos = subtotal * 0.13;
+            const tasasPortuarias = subtotal * 0.05; // Ejemplo: 5% de tasas portuarias
+            const total = subtotal + impuestos + tasasPortuarias;
+
+            html += `
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal:</span>
+                        <span>₡${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Impuestos (13%):</span>
+                        <span>₡${impuestos.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Tasas portuarias (5%):</span>
+                        <span>₡${tasasPortuarias.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold mt-2 fs-5">
+                        <span>TOTAL:</span>
+                        <span>₡${total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+
+            html += `</div></div>`; // Cierre card-body y card
+
+            if (final) {
+                html += `
+                    <div class="mt-3">
+                        <button class="btn btn-success w-100 py-2" id="btnConfirmarReserva">Pagar Reserva</button>
+
+                    </div>`;
+            }
+
+            resumenContainer.html(html);
+        }
+
+
+        });
+
+
+                 $(document).on('click', '#btnConfirmarReserva', async function() {
+            // 1. Mostrar formulario de pago en lugar de enviar directamente
+            try {
+                const fechasCrucero = await $.get(`/Reserva/GetByCruceroIdAsync?cruceroId=${cruceroSeleccionado.id}`);
+                const fechaCrucero = fechasCrucero.find(f => f.id == fechaSeleccionada.id);
+
+                if (fechaCrucero) {
+                    const fechaLimite = new Date(fechaCrucero.fechaLimitePago);
+                    $('#fecha-limite-texto').text(fechaLimite.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    }));
+                    $('#info-fecha-limite').show();
+
+                    // Calcular fecha límite para pago restante (15 días antes del viaje)
+                    const fechaLimiteRestante = new Date(fechaLimite);
+                    fechaLimiteRestante.setDate(fechaLimite.getDate() - 15);
+                    $('#fecha-limite-pago').text(fechaLimiteRestante.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    }));
+                }
+            } catch (error) {
+                console.error("Error al obtener fecha límite:", error);
+            }
+
+            // 2. Configurar información del usuario
+        try {
+            const data = await $.get('/Reserva/GetObtenerDatosUsuario');
+            $('#usuario-nombre').text(data.nombre);
+            $('#usuario-email').text(data.email);
+        } catch (error) {
+            console.error("No se pudo obtener los datos del usuario:", error);
+            $('#usuario-nombre').text("Desconocido");
+            $('#usuario-email').text("sin-correo@demo.com");
+        }
+
+
+            // 3. Calcular y mostrar montos
+            const total = calcularTotal();
+            $('#monto-total').text('₡' + total.toFixed(2));
+            $('#monto-deposito').text('₡' + (total * 0.5).toFixed(2));
+            $('#monto-restante').text('₡' + (total * 0.5).toFixed(2));
+
+            // 4. Mostrar paso de pago
+            $('#step6-container').hide();
+            $('#step7-container').show();
+            currentStep = 7;
+        });
+
+
+        // Función para procesar el pago y crear la reserva
+        function procesarPagoYCrearReserva(esDeposito) {
+            // 1. Crear el objeto básico de reserva
+            const total = calcularTotal();
+            const montoAPagar = esDeposito ? total * 0.5 : total;
+
+            const reservaDTO = {
+                CruceroId: cruceroSeleccionado.id,
+                Total: montoAPagar, 
+                UsuarioId: usuarioId,
+                Huespedes: [],
+                ReservasHabitaciones: [],
+                ReservasComplementos: []
+            };
+
+            // 2. Agregar huéspedes (igual que antes)
+            $('#huespedes-container > div').each(function() {
+                const inputs = $(this).find('input, select');
+                reservaDTO.Huespedes.push({
+                    Nombre: $(inputs[0]).val(),
+                    Apellidos: $(inputs[1]).val(),
+                    Edad: parseInt($(inputs[2]).val()),
+                    DocumentoIdentidad: $(inputs[3]).val(),
+                    Telefono: $(inputs[4]).val()
+                });
+            });
+
+            // 3. Agregar habitaciones (igual que antes)
+            habitacionesSeleccionadas.forEach(hab => {
+                for (let i = 0; i < hab.cantidad; i++) {
+                    reservaDTO.ReservasHabitaciones.push({
+                        HabitacionId: hab.id,
+                        CantidadPasajeros: hab.pasajerosPorHab,
+                        Total: hab.precio
+                    });
+                }
+            });
+
+            // 4. Agregar complementos (igual que antes)
+            complementosSeleccionados.forEach(comp => {
+                reservaDTO.ReservasComplementos.push({
+                    ComplementoId: comp.id,
+                    Cantidad: comp.cantidad,
+                    Total: comp.precio * comp.cantidad
+                });
+            });
+
+            // 5. Enviar al backend (igual que antes)
+            $.ajax({
+                url: '/Reserva/Create',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(reservaDTO),
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = '/Reserva/Details/' + response.reservaId;
+                    } else {
+                        let errorMsg = 'Error: ';
+                        if (response.message) {
+                            errorMsg += response.message;
+                        } else if (response.errors) {
+                            errorMsg += Object.values(response.errors).join('\n');
+                        } else {
+                            errorMsg += 'Error desconocido al crear la reserva';
+                        }
+                        alert(errorMsg);
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Error en la solicitud (HTTP ' + xhr.status + ')\n';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMsg += 'Mensaje: ' + response.message + '\n';
+                        }
+                        if (response.errors) {
+                            errorMsg += 'Errores:\n';
+                            for (var key in response.errors) {
+                                if (response.errors.hasOwnProperty(key)) {
+                                    errorMsg += '- ' + key + ': ' + response.errors[key].join(', ') + '\n';
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        errorMsg += 'Respuesta del servidor: ' + xhr.responseText;
+                    }
+                    alert(errorMsg);
+                }
+            });
+        }
+
+                $(document).ready(function () {
+            // Formatear el número de tarjeta automáticamente
+            $('#tarjetaNumero').on('input', function () {
+                let valor = $(this).val().replace(/\D/g, ''); // Solo números
+                valor = valor.substring(0, 16); // Máximo 16 dígitos
+                let formateado = valor.match(/.{1,4}/g)?.join(' ') || '';
+                $(this).val(formateado);
+            });
+
+            // Formatear la fecha de expiración automáticamente
+            $('#tarjetaExpiracion').on('input', function () {
+                let valor = $(this).val().replace(/\D/g, '');
+                if (valor.length > 2) {
+                    valor = valor.substring(0, 4);
+                    valor = valor.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+                }
+                $(this).val(valor);
+            });
+        });
+
+
+
+        // Evento para el botón de procesar pago
+               // Evento para el botón de procesar pago
+        $(document).on('click', '#btnProcesarPago', function () {
+            // Validar datos de tarjeta (simulación)
+            const tarjetaNumero = $('#tarjetaNumero').val().replace(/\s+/g, ''); // Eliminar espacios
+            const fechaExp = $('#tarjetaExpiracion').val();
+            const [mesStr, añoStr] = fechaExp.split('/');
+            const mes = parseInt(mesStr, 10);
+            const año = parseInt('20' + añoStr, 10); // Asume formato 'MM/AA' (ej: 04/25 → 2025)
+
+            // Fecha actual
+            const hoy = new Date();
+            const mesActual = hoy.getMonth() + 1; // JS cuenta desde 0
+            const añoActual = hoy.getFullYear();
+
+            const tarjetaVigente = (año > añoActual) || (año === añoActual && mes >= mesActual);
+
+            const tarjetaValida = tarjetaNumero.length === 16 &&
+                                  fechaExp.length === 5 &&
+                                  $('#tarjetaCVV').val().length === 3 &&
+                                  $('#tarjetaTitular').val().trim().length > 0 &&
+                                  tarjetaVigente;
+
+            // Validar si todos los datos son correctos
+            if (!tarjetaValida) {
+                if (!tarjetaVigente) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tarjeta vencida',
+                        text: 'La fecha de expiración indica que la tarjeta ya no está vigente. Por favor revise los datos.',
+                        confirmButtonText: 'Ok'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Datos incompletos',
+                        text: 'Por favor complete correctamente todos los datos de la tarjeta',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+                return;
+            }
+
+            // Determinar si es depósito o pago completo
+            const esDeposito = $('input[name="opcionPago"]:checked').val() === 'deposito';
+            const monto = esDeposito ? calcularTotal() * 0.5 : calcularTotal();
+
+            Swal.fire({
+                title: '¿Confirmar pago?',
+                text: `¿Deseas confirmar el pago por ₡${monto.toFixed(2)}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, pagar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    procesarPagoYCrearReserva(esDeposito);
+                }
+            });
+        });
+
+
+    </script>
+}

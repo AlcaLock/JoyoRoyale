@@ -1,0 +1,53 @@
+﻿@model Crucero.Application.DTOs.BarcosDTO
+
+@{
+    ViewData["Title"] = "Detalles del Barco";
+}
+
+<h1>Detalles del Barco</h1>
+
+<div class="row">
+    <div class="col">
+        <h4>@Model.Nombre</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Nombre</dt>
+            <dd class="col-sm-9">@Model.Nombre</dd>
+
+            <dt class="col-sm-3">Descripción</dt>
+            <dd class="col-sm-9">@Model.Descripcion</dd>
+
+            <dt class="col-sm-3">Capacidad de huéspedes</dt>
+            <dd class="col-sm-9">@Model.Capacidad</dd>
+        </dl>
+
+        <h4>Habitaciones Disponibles</h4>
+        <hr />
+        @if (Model.BarcoHabitaciones != null && Model.BarcoHabitaciones.Any())
+        {
+            <ul class="list-group" style="font-size: 1.2rem; padding: 0; margin: 0;">
+                @foreach (var habitacion in Model.BarcoHabitaciones)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        style="padding: 8px 12px; margin-bottom: 4px;">
+                        <strong>@habitacion.Habitacion.Nombre</strong>
+                        <span class="badge bg-primary" style="font-size: 1rem; padding: 6px 10px;">
+                            @habitacion.CantidadDisponible disponibles
+                        </span>
+                    </li>
+                }
+            </ul>
+
+        }
+        else
+        {
+            <p class="text-danger">No hay habitaciones disponibles.</p>
+        }
+    </div>
+</div>
+
+<div class="btn-group mt-3">
+    <a asp-action="Index" class="btn btn-info">
+        <i class="bi bi-arrow-return-left"></i> Regresar al listado
+    </a>
+</div>

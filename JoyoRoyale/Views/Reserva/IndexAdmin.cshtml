@@ -1,0 +1,122 @@
+﻿@model List<Crucero.Application.DTOs.ReservasDTO>
+@{
+    ViewData["Title"] = "Reservas";
+    var hayFiltros = !string.IsNullOrEmpty(Context.Request.Query["cruceroId"]) || !string.IsNullOrEmpty(Context.Request.Query["fechaCruceroId"]);
+}
+
+<h1>Reservas</h1>
+
+<form method="get" asp-action="IndexAdmin" class="mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="cruceroId" class="form-label">Crucero</label>
+            <select id="cruceroId" name="cruceroId" class="form-select">
+                <option value="">-- Seleccione un crucero --</option>
+                @foreach (var crucero in ViewBag.Cruceros)
+                {
+                    var selected = Context.Request.Query["cruceroId"] == crucero.Id.ToString();
+                    <option value="@crucero.Id" selected="@(selected ? "selected" : null)">@crucero.Nombre</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="fechaCruceroId" class="form-label">Fecha de inicio</label>
+            <select id="fechaCruceroId" name="fechaCruceroId" class="form-select">
+                <option value="">-- Seleccione una fecha --</option>
+                @if (ViewBag.FechasDisponibles != null)
+                {
+                    foreach (var fecha in ViewBag.FechasDisponibles)
+                    {
+                        var selected = Context.Request.Query["fechaCruceroId"] == fecha.Id.ToString();
+                        <option value="@fecha.Id" selected="@(selected ? "selected" : null)">
+                            @fecha.FechaInicio.ToString("dd/MM/yyyy")
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4 d-flex">
+            <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+            <a href="@Url.Action("IndexAdmin")" class="btn btn-secondary">Limpiar</a>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info mt-4">
+        @if (hayFiltros)
+        {
+            <text>No hay reservas para esta selección. Intenta con otros filtros.</text>
+        }
+        else
+        {
+            <text>No hay reservas registradas.</text>
+        }
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var reserva in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Reserva #@reserva.Id</h5>
+                        <p class="card-text"><strong>Usuario:</strong> @(reserva.Usuario?.Nombre ?? "Sin usuario asignado")</p>
+                        <p class="card-text"><strong>Crucero:</strong> @(reserva.Crucero?.Nombre ?? "Sin crucero asignado")</p>
+                        <p class="card-text"><strong>Barco:</strong> @(reserva.Crucero?.Barco?.Nombre ?? "Sin barco asignado")</p>
+                        <p class="card-text"><strong>Total:</strong> @reserva.Total.ToString("C0")</p>
+                    </div>
+                    <div class="card-footer">
+                        <a class="btn btn-primary" asp-action="Details" asp-route-id="@reserva.Id">Detalles</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cruceroId = document.getElementById('cruceroId').value;
+        if (cruceroId) {
+            cargarFechas(cruceroId);
+        }
+    });
+
+    async function cargarFechas(cruceroId) {
+        try {
+            const response = await fetch(`/Reserva/ObtenerFechasPorCrucero/${cruceroId}`);
+            if (!response.ok) throw new Error('Error en la respuesta');
+
+            const fechas = await response.json();
+            const fechaSelect = document.getElementById('fechaCruceroId');
+            const fechaActual = fechaSelect.value;
+
+            fechaSelect.innerHTML = '<option value="">-- Seleccione una fecha --</option>';
+
+            fechas.forEach(fecha => {
+                const option = new Option(fecha.texto, fecha.id);
+                fechaSelect.add(option);
+            });
+
+            if (fechaActual && Array.from(fechaSelect.options).some(o => o.value === fechaActual)) {
+                fechaSelect.value = fechaActual;
+            }
+        } catch (error) {
+            console.error('Error al cargar fechas:', error);
+        }
+    }
+
+    document.getElementById('cruceroId').addEventListener('change', function () {
+        if (this.value) {
+            cargarFechas(this.value);
+        } else {
+            document.getElementById('fechaCruceroId').innerHTML = '<option value="">-- Seleccione una fecha --</option>';
+        }
+    });
+</script>

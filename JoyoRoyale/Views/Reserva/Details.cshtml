@@ -1,0 +1,270 @@
+﻿@model Crucero.Application.DTOs.ReservasDTO
+
+@{
+    ViewData["Title"] = "Factura de Reserva";
+    var id = Model.Id;
+    var fechaRegreso = Model.Crucero.FechasCruceros.First().FechaInicio.AddDays(Model.Crucero.Dias);
+    var subtotalHabitaciones = Model.ReservasHabitaciones.Sum(h => h.Habitacion.PreciosHabitaciones.First().Precio);
+    var subtotalComplementos = Model.ReservasComplementos.Sum(c => c.Total);
+    var subtotal = subtotalHabitaciones + subtotalComplementos;
+    var impuestos = subtotal * 0.13m; // 13% de impuestos
+    var tasasPortuarias = subtotal * 0.05m;
+    var totalPagar = subtotal + impuestos + tasasPortuarias;
+    var estadoPago = Model.Total >= totalPagar ? "Pagado" : "Pendiente";
+    var montoPendiente = totalPagar - Model.Total;
+
+    decimal tipoCambio = 0;
+    decimal totalPagarDolares = 0;
+    decimal montoPendienteDolares = 0;
+
+    if (decimal.TryParse(ViewBag.TipoCambio?.ToString() as string, out tipoCambio) && tipoCambio > 0)
+    {
+        totalPagarDolares = totalPagar / tipoCambio;
+        montoPendienteDolares = montoPendiente / tipoCambio;
+    }
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="text-center">Factura de Reserva</h2>
+        </div>
+        <div class="card-body">
+            <h4 class="mb-3">Datos del Cliente</h4>
+            <p>Nombre del Cliente: @ViewBag.Usuario.Nombre</p>
+            <p>Correo: @ViewBag.Usuario.Correo</p>
+            <p>Numero de telefono: @ViewBag.Usuario.Telefono</p>
+            <h4 class="mb-3">Detalles de la Reserva</h4>
+            <p><strong>Crucero:</strong> @Model.Crucero.Nombre</p>
+            <p><strong>Puerto de Salida:</strong> @Model.Crucero.Itinerarios.OrderBy(i => i.Dia).First().Puerto.Nombre</p>
+            <p><strong>Puerto de Regreso:</strong> @Model.Crucero.Itinerarios.OrderBy(i => i.Dia).Last().Puerto.Nombre</p>
+            <p><strong>Fecha de Inicio:</strong> @Model.Crucero.FechasCruceros.First().FechaInicio.ToShortDateString()</p>
+            <p><strong>Fecha de Regreso:</strong> @fechaRegreso.ToShortDateString()</p>
+
+            <h4 class="mt-4">Habitaciones Reservadas</h4>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Habitación</th>
+                        <th>Cantidad Reservada</th>
+                        <th>Huéspedes Totales</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var grupo in Model.ReservasHabitaciones.GroupBy(h => h.Habitacion.Nombre))
+                    {
+                        var cantidadReservada = grupo.Count();
+                        var totalPasajeros = grupo.Sum(h => h.CantidadPasajeros);
+                        var precioUnitario = grupo.First().Habitacion.PreciosHabitaciones.First().Precio;
+                        var totalHabitacion = cantidadReservada * precioUnitario;
+
+                        <tr>
+                            <td>@grupo.Key</td>
+                            <td>@cantidadReservada</td>
+                            <td>@totalPasajeros</td>
+                            <td>₡@precioUnitario.ToString("N0")</td>
+                            <td>₡@totalHabitacion.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="text-end"><strong>Total Habitaciones:</strong> ₡@subtotalHabitaciones.ToString("N0")</p>
+
+            <h4 class="mt-4">Complementos Adquiridos</h4>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Complemento</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var comp in Model.ReservasComplementos)
+                    {
+                        <tr>
+                            <td>@comp.Complemento.Nombre</td>
+                            <td>@comp.Cantidad</td>
+                            <td>₡@comp.Total.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p class="text-end"><strong>Total Complementos:</strong> ₡@subtotalComplementos.ToString("N0")</p>
+
+            <hr />
+            <p class="text-end"><strong>Subtotal:</strong> ₡@subtotal.ToString("N0")</p>
+            <p class="text-end"><strong>Impuestos (13%):</strong> ₡@impuestos.ToString("N0")</p>
+            <p class="text-end"><strong>Tasa portuaria (5%):</strong> ₡@tasasPortuarias.ToString("N0")</p>
+            <h3 class="text-end"><strong>Total a Pagar:</strong> ₡@totalPagar.ToString("N0") | $@totalPagarDolares.ToString("N2")</h3>
+
+            <h4 class="mt-4">Estado de Pago</h4>
+            <p><strong>Estado:</strong> @estadoPago</p>
+            @if (estadoPago == "Pendiente")
+            {
+                <p><strong>Fecha Límite de Pago:</strong> @Model.Crucero.FechasCruceros.First().FechaLimitePago.ToShortDateString()</p>
+                <p><strong>Monto Pendiente:</strong> ₡@montoPendiente.ToString("N0") | $@montoPendienteDolares.ToString("N2")</p>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a class="btn btn-primary" asp-controller="Reserva" asp-action="FacturaReserva" asp-route-id="@id" target="_blank">Ver PDF en pagina</a>
+    <form asp-controller="Reserva" asp-action="EnviarFacturaPorCorreo" asp-route-id="@id" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-primary">Enviar Correo</button>
+    </form>
+
+    @if (User.IsInRole("Cliente") && estadoPago == "Pendiente")
+    {
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPago">
+            Pagar Monto Pendiente
+        </button>
+
+        <!-- Modal de Pago -->
+        <div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalPagoLabel">Pago de Saldo Pendiente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formPago">
+                            <div class="alert alert-info">
+                                <strong>Monto a pagar:</strong> ₡@montoPendiente.ToString("N0") | $@montoPendienteDolares.ToString("N2")
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Número de Tarjeta</label>
+                                <input type="text" class="form-control" id="tarjetaNumero" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Fecha Expiración</label>
+                                    <input type="text" class="form-control" id="tarjetaExpiracion" placeholder="MM/AA" maxlength="5" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" class="form-control" id="tarjetaCVV" placeholder="123" maxlength="3" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Titular de la Tarjeta</label>
+                                <input type="text" class="form-control" id="tarjetaTitular" placeholder="Nombre como aparece en la tarjeta">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btnProcesarPago">Pagar Ahora</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Verificar si hay un mensaje en TempData
+        var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+        if (mensaje) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+
+                $(document).ready(function () {
+            // Formatear el número de tarjeta automáticamente
+            $('#tarjetaNumero').on('input', function () {
+                let valor = $(this).val().replace(/\D/g, ''); // Solo números
+                valor = valor.substring(0, 16); // Máximo 16 dígitos
+                let formateado = valor.match(/.{1,4}/g)?.join(' ') || '';
+                $(this).val(formateado);
+            });
+
+            // Formatear la fecha de expiración automáticamente
+            $('#tarjetaExpiracion').on('input', function () {
+                let valor = $(this).val().replace(/\D/g, '');
+                if (valor.length > 2) {
+                    valor = valor.substring(0, 4);
+                    valor = valor.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+                }
+                $(this).val(valor);
+            });
+        });
+
+               // Evento para el botón de procesar pago - VERSIÓN FINAL
+        $(document).on('click', '#btnProcesarPago', function() {
+            // 1. Validar tarjeta (opcional, puedes quitarlo si es simulación)
+                 const tarjetaNumero = $('#tarjetaNumero').val().replace(/\s+/g, '');
+        const fechaExp = $('#tarjetaExpiracion').val();
+        const [mesStr, añoStr] = fechaExp.split('/');
+        const mes = parseInt(mesStr, 10);
+        const año = parseInt('20' + añoStr, 10);
+
+        const hoy = new Date();
+        const mesActual = hoy.getMonth() + 1;
+        const añoActual = hoy.getFullYear();
+
+        const tarjetaVigente = (año > añoActual) || (año === añoActual && mes >= mesActual);
+
+        const tarjetaValida = tarjetaNumero.length === 16 &&
+                              fechaExp.length === 5 &&
+                              !isNaN(mes) && !isNaN(año) &&
+                              $('#tarjetaCVV').val().length === 3 &&
+                              $('#tarjetaTitular').val().trim().length > 0 &&
+                              tarjetaVigente;
+
+        if (!tarjetaValida) {
+            Swal.fire({
+                icon: tarjetaVigente ? 'warning' : 'error',
+                title: tarjetaVigente ? 'Datos incompletos' : 'Tarjeta vencida',
+                text: tarjetaVigente
+                    ? 'Por favor complete correctamente todos los datos de la tarjeta.'
+                    : 'La fecha de expiración indica que la tarjeta ya no está vigente.',
+                confirmButtonText: 'Entendido'
+            });
+            return;
+        }
+
+                     const montoPendiente = @montoPendiente.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+            const montoNumerico = parseFloat(montoPendiente);
+
+            // Validar que el monto sea correcto
+            if (isNaN(montoNumerico) || montoNumerico <= 0) {
+                Swal.fire('Error', 'Monto no válido', 'error');
+                return;
+            }
+
+            console.log("Enviando - ReservaId:", @Model.Id, "Monto:", montoNumerico); // Para depuración
+
+            $.ajax({
+                url: '/Reserva/ProcesarPago',
+                type: 'POST',
+                data: {
+                    reservaId: @Model.Id,
+                    monto: montoNumerico.toString()
+                },
+                traditional: true, // Importante para formatos decimales
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                }
+            });
+        });
+        // });
+    </script>
+}

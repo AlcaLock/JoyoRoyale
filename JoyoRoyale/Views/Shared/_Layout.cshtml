@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cruceros</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Cruceros.Web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sweetalert2.min.css" asp-append-version="true" />
+
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff; /* Fondo azul claro */
+        }
+
+        /* Barra lateral horizontal */
+        .navbar-horizontal {
+            background-color: #0077be; /* Azul marino */
+            padding: 10px 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .navbar-horizontal .navbar-brand {
+                color: white;
+                font-size: 1.5rem;
+                font-weight: bold;
+                text-decoration: none;
+            }
+
+            .navbar-horizontal .navbar-nav {
+                display: flex;
+                list-style: none;
+                margin: 0;
+                padding: 0;
+                flex-direction: row-reverse; /* Alineación de derecha a izquierda */
+            }
+
+            .navbar-horizontal .nav-item {
+                margin-left: 20px; /* Cambiado de margin-right a margin-left */
+            }
+
+            .navbar-horizontal .nav-link {
+                color: white;
+                text-decoration: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                transition: background-color 0.3s, color 0.3s;
+            }
+
+                .navbar-horizontal .nav-link:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                    color: #ff7f50; /* Coral */
+                }
+
+            /* Dropdown de Mantenimiento */
+            .navbar-horizontal .dropdown-menu {
+                background-color: #005f8c; /* Azul más oscuro */
+                border: none;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .navbar-horizontal .dropdown-item {
+                color: white;
+                padding: 10px 15px;
+                transition: background-color 0.3s;
+            }
+
+                .navbar-horizontal .dropdown-item:hover {
+                    background-color: #ff7f50; /* Coral */
+                    color: white;
+                }
+
+            /* Perfil de Usuario */
+            .navbar-horizontal .profile-dropdown {
+                position: relative;
+            }
+
+            .navbar-horizontal .profile-img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+
+            .navbar-horizontal .dropdown-menu {
+                position: absolute;
+                right: 0;
+                top: 100%;
+                z-index: 1000;
+            }
+    </style>
+</head>
+<body>
+    <!-- Barra Lateral Horizontal -->
+    <nav class="navbar-horizontal">
+        <!-- Logo -->
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">Joyo Royale</a>
+
+        <!-- Menú Principal -->
+        <ul class="navbar-nav">
+            <!-- Perfil de Usuario -->
+            <li class="nav-item profile-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img class="rounded-circle mx-2 mt-1" src="~/images/profile.png" alt=@User.Identity!.Name width="32px" height="32px" />
+
+                    <span class="d-none d-sm-inline mx-1">@User.Identity!.Name</span>
+
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" asp-area="" asp-controller="Login" asp-action="LogOff">Salir</a></li>
+                </ul>
+            </li>
+
+            <!-- Dropdown de Mantenimiento -->
+            @if (User.IsInRole("Administrador") == true)
+            {
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMantenimiento" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mantenimiento
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdownMantenimiento">
+                        <li><a class="dropdown-item" asp-controller="Habitacion" asp-action="IndexAdmin">Habitaciones</a></li>
+                        <li><a class="dropdown-item" asp-controller="Barco" asp-action="IndexAdmin">Barcos</a></li>
+                        <li><a class="dropdown-item" asp-controller="Crucero" asp-action="IndexAdmin">Cruceros</a></li>
+                        <li><a class="dropdown-item" asp-controller="Complemento" asp-action="IndexAdmin">Complementos</a></li>
+                    </ul>
+                </li>
+            }
+            <!-- Enlaces del Menú -->
+            @if (User.IsInRole("Administrador") == true)
+            {
+                <li class="nav-item"><a class="nav-link" asp-controller="Reserva" asp-action="IndexAdmin">Historial de Reservas</a></li>
+            }
+
+            <!-- Enlaces del Menú -->
+            @if (User.IsInRole("Cliente") == true)
+            {
+                <li class="nav-item"><a class="nav-link" asp-controller="Reserva" asp-action="Index">Mis Reservas</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Reserva" asp-action="Create">Reservar Crucero</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Crucero" asp-action="Index">Cruceros</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Barco" asp-action="Index">Barcos</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Habitacion" asp-action="Index">Habitaciones</a></li>
+            }
+           
+        </ul>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mt-4">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <script src="~/js/sweetalert2.all.min.js" asp-append-version="true"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @if (ViewBag.NotificationMessage != null)
+    {
+        <script>
+
+            @Html.Raw(@ViewBag.NotificationMessage);
+        </script>
+    }
+</body>
+</html>

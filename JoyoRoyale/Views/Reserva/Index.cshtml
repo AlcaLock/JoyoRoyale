@@ -1,0 +1,58 @@
+﻿@model List<Crucero.Application.DTOs.ReservasDTO>
+
+@{
+    ViewData["Title"] = "Reservas";
+}
+
+<h1>Reservas</h1>
+
+@if (Model.Any())
+{
+        <div class="row">
+        @foreach (var reserva in Model)
+        {
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">Reserva #@reserva.Id</h5>
+                                <p class="card-text"><strong>Usuario:</strong> @(reserva.Usuario != null ? reserva.Usuario.Nombre : "Sin usuario asignado")</p>
+                                <p class="card-text"><strong>Crucero:</strong> @(reserva.Crucero != null ? reserva.Crucero.Nombre : "Sin crucero asignado")</p>
+                                <p class="card-text"><strong>Barco:</strong> @(reserva.Crucero?.Barco != null ? reserva.Crucero.Barco.Nombre : "Sin barco asignado")</p>
+                                <p class="card-text"><strong>Total:</strong> @reserva.Total.ToString("C0")</p>
+                            </div>
+                            <div class="card-footer">
+                                <a class="btn btn-primary" asp-action="Details" asp-route-id="@reserva.Id">Detalles</a>
+                            </div>
+                        </div>
+                    </div>
+        }
+        </div>
+}
+else
+{
+        <div class="alert alert-info text-center" role="alert">
+            <h4 class="alert-heading">En este momento no tienes reservas</h4>
+            <p>Puedes explorar nuestros cruceros disponibles y realizar una nueva reserva cuando lo desees.</p>
+            <hr>
+            <a class="btn btn-primary" asp-controller="Reserva" asp-action="Create">Ver cruceros disponibles</a>
+        </div>
+}
+
+<div class="mt-3">
+</div>
+
+@section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            // Verificar si hay un mensaje en TempData
+            var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+            if (mensaje) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: mensaje,
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        </script>
+}

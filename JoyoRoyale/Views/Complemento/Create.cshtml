@@ -1,0 +1,60 @@
+﻿@model Crucero.Application.DTOs.ComplementosDTO
+
+@{
+    ViewData["Title"] = "Crear Complemento";
+}
+
+<h1 class="mb-3">Crear Complemento</h1>
+
+<div class="card shadow-lg p-4">
+    <form asp-action="Create" asp-antiforgery="true" class="row g-3">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Nombre" class="form-label">Nombre</label>
+                <input asp-for="Nombre" class="form-control" required />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Descripcion" class="form-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Precio" class="form-label">Precio</label>
+                <input asp-for="Precio" type="number" step="0.01" class="form-control" required />
+                <span asp-validation-for="Precio" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TipoAplicacion" class="form-label">Tipo de Aplicación</label>
+                <select asp-for="TipoAplicacion" class="form-control" required>
+                    <option value="">Seleccione un tipo</option>
+                    <option value="Por camarote">Por camarote</option>
+                    <option value="Bar">Bar</option>
+                    <option value="Spa">Spa</option>
+                    <option value="Restaurante">Restaurante</option>
+                </select>
+                <span asp-validation-for="TipoAplicacion" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <div class="btn-group">
+                    <a asp-action="Index" class="btn btn-secondary">Regresar</a>
+                    <button type="submit" class="btn btn-primary">Crear</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,59 @@
+﻿@model List<Crucero.Application.DTOs.HabitacionesDTO>
+
+@{
+    ViewData["Title"] = "Administrar Habitaciones";
+}
+
+<h1>Administrar Habitaciones</h1>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Crear nueva habitación</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model[0].Nombre)</th>
+            <th>@Html.DisplayNameFor(model => model[0].CapacidadMinima)</th>
+            <th>@Html.DisplayNameFor(model => model[0].CapacidadMaxima)</th>
+            <th>@Html.DisplayNameFor(model => model[0].Tamano)</th>
+            <th>@Html.DisplayNameFor(model => model[0].Descripcion)</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                <td>@Html.DisplayFor(modelItem => item.CapacidadMinima)</td>
+                <td>@Html.DisplayFor(modelItem => item.CapacidadMaxima)</td>
+                <td>@Html.DisplayFor(modelItem => item.Tamano) m²</td>
+                <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
+                <td>
+                    <a asp-action="UpdateHa" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Detalles</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Verificar si hay un mensaje en TempData
+        var mensaje = @Html.Raw(Json.Serialize(TempData["Mensaje"]));
+        if (mensaje) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: mensaje,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    </script>
+}
+
+
+
