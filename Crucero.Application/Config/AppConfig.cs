@@ -10,6 +10,7 @@ public class AppConfig
 {
     public SmtpConfiguration SmtpConfiguration { get; set; } = default!;
     public Crypto Crypto { get; set; } = default!;
+    public BccrSettings BccrSettings { get; set; } = default!;
 }
 public class SmtpConfiguration
 {
@@ -22,5 +23,12 @@ public class SmtpConfiguration
 }
 public class Crypto { 
     public string Secret { get; set; } = default!;
+}
+
+public class BccrSettings
+{
+    public string Token { get; set; } = default!;
+    public string Email { get; set; } = default!;
+    public string NombreApp { get; set; } = default!;
 }
 

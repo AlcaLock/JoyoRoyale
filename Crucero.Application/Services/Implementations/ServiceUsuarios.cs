@@ -24,12 +24,8 @@ namespace Crucero.Application.Services.Implementations
 
         public async Task<string> AddAsync(UsuariosDTO dto)
         {
-            // Llave secreta
-            string secret = _options.Value.Crypto.Secret;
-            // Password encriptado
-            string passwordEncrypted = Cryptography.Encrypt(dto.Contrasena!, secret);
-            // Establecer password DTO
-            dto.Contrasena = passwordEncrypted;
+            // Store passwords using PBKDF2 with per-user salt.
+            dto.Contrasena = Cryptography.HashPassword(dto.Contrasena!);
             var objectMapped = _mapper.Map<Usuarios>(dto);
 
             return await _repository.AddAsync(objectMapped);
@@ -60,12 +56,28 @@ namespace Crucero.Application.Services.Implementations
         {
             UsuariosDTO usuarioDTO = null!;
 
-            // Llave secreta
             string secret = _options.Value.Crypto.Secret;
-            // Password encriptado
-            string passwordEncrypted = Cryptography.Encrypt(Contrasenna, secret);
 
-            var @object = await _repository.LoginAsync(id, passwordEncrypted);
+            var @object = await _repository.FindByEmailAsync(id);
+
+            if (@object == null)
+            {
+                return usuarioDTO;
+            }
+
+            bool isValidPassword = Cryptography.VerifyPassword(Contrasenna, @object.Contrasena, secret);
+
+            if (!isValidPassword)
+            {
+                return usuarioDTO;
+            }
+
+            // Seamless migration: legacy encrypted passwords are upgraded after successful login.
+            if (!Cryptography.IsPbkdf2Hash(@object.Contrasena))
+            {
+                @object.Contrasena = Cryptography.HashPassword(Contrasenna);
+                await _repository.UpdateAsync();
+            }
 
             if (@object != null)
             {

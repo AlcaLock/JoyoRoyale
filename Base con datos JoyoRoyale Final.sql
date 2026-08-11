@@ -558,9 +558,9 @@ SET IDENTITY_INSERT [dbo].[Roles] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Usuarios] ON 
 GO
-INSERT [dbo].[Usuarios] ([ID], [Nombre], [Telefono], [Correo], [FechaNacimiento], [Pais], [Contrasena], [RolID]) VALUES (1, N'Brandon Barrantes', N'6044 8095', N'Bran8907@gmail.com', CAST(N'2000-11-28' AS Date), N'Costa Rica', N'u3djZaMc+ipFDIgoAeS4iQ==', 2)
+INSERT [dbo].[Usuarios] ([ID], [Nombre], [Telefono], [Correo], [FechaNacimiento], [Pais], [Contrasena], [RolID]) VALUES (1, N'Cliente Demo', N'6000 0001', N'cliente.demo@joyoroyale.local', CAST(N'2000-11-28' AS Date), N'Costa Rica', N'u3djZaMc+ipFDIgoAeS4iQ==', 2)
 GO
-INSERT [dbo].[Usuarios] ([ID], [Nombre], [Telefono], [Correo], [FechaNacimiento], [Pais], [Contrasena], [RolID]) VALUES (2, N'Brandon admin', N'6044 8095', N'Brandon28200075@gmail.com', CAST(N'2000-11-28' AS Date), N'Costa Rica', N'u3djZaMc+ipFDIgoAeS4iQ==', 1)
+INSERT [dbo].[Usuarios] ([ID], [Nombre], [Telefono], [Correo], [FechaNacimiento], [Pais], [Contrasena], [RolID]) VALUES (2, N'Admin Demo', N'6000 0002', N'admin.demo@joyoroyale.local', CAST(N'2000-11-28' AS Date), N'Costa Rica', N'u3djZaMc+ipFDIgoAeS4iQ==', 1)
 GO
 SET IDENTITY_INSERT [dbo].[Usuarios] OFF
 GO

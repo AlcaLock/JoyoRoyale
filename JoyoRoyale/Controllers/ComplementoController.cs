@@ -9,7 +9,6 @@ namespace JoyoRoyale.Web.Controllers
     public class ComplementoController : Controller
     {
         private readonly IServiceComplementos _serviceComplemento;
-        private readonly ILogger<LoginController> _logger;
 
         public ComplementoController(IServiceComplementos serviceComplemento)
         {
@@ -86,7 +85,7 @@ namespace JoyoRoyale.Web.Controllers
               
                 return RedirectToAction("IndexAdmin");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ModelState.AddModelError("", "Ocurrió un error al procesar la solicitud. Intenta nuevamente.");
                 return View(dto);
@@ -166,7 +165,7 @@ namespace JoyoRoyale.Web.Controllers
 
                 return RedirectToAction("IndexAdmin");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 TempData["ErrorMessages"] = "Ocurrió un error al procesar la solicitud. Intenta nuevamente.";
                 return View(dto);

@@ -1,7 +1,9 @@
 ﻿// Ruta: Crucero.Web/Services/WebTipoCambioService.cs
+using Crucero.Application.Config;
 using Crucero.Application.DTOs;
 using Crucero.Application.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using ServiceReference1;
 using System.Globalization;
 using System.Xml.Linq;
@@ -9,10 +11,12 @@ using System.Xml.Linq;
 public class WebTipoCambioService : ITipoCambioService
 {
     private readonly IMemoryCache _cache;
+    private readonly IOptions<AppConfig> _options;
 
-    public WebTipoCambioService(IMemoryCache cache)
+    public WebTipoCambioService(IMemoryCache cache, IOptions<AppConfig> options)
     {
         _cache = cache;
+        _options = options;
     }
 
     public async Task<TipoCambioDto?> ObtenerYGuardarTipoCambioAsync()
@@ -21,8 +25,15 @@ public class WebTipoCambioService : ITipoCambioService
             wsindicadoreseconomicosSoapClient.EndpointConfiguration.wsindicadoreseconomicosSoap);
 
         var fechaHoy = DateTime.Now.ToString("dd/MM/yyyy");
+        var bccr = _options.Value.BccrSettings;
+
+        if (string.IsNullOrWhiteSpace(bccr.Token) || string.IsNullOrWhiteSpace(bccr.Email))
+        {
+            return null;
+        }
+
         var xml = await client.ObtenerIndicadoresEconomicosXMLAsync(
-            "317", fechaHoy, fechaHoy, "JoyoRoyale", "N", "bbarrantes@est.utn.ac.cr", "EBAOAAARAC"
+            "317", fechaHoy, fechaHoy, bccr.NombreApp, "N", bccr.Email, bccr.Token
         );
 
         var xdoc = XDocument.Parse(xml);

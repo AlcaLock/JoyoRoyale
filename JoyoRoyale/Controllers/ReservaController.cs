@@ -243,6 +243,7 @@ namespace JoyoRoyale.Web.Controllers
         }
 
         // GET: ReservaController/Create
+        [Authorize]
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
@@ -273,6 +274,7 @@ namespace JoyoRoyale.Web.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([FromBody] ReservasDTO dto)
@@ -426,11 +428,11 @@ namespace JoyoRoyale.Web.Controllers
             var file = _converter.Convert(pdf);
 
             // Forzar visualización en navegador como archivo PDF
-            Response.Headers.Add("Content-Disposition", "inline; filename=FacturaReserva.pdf");
+            Response.Headers["Content-Disposition"] = "inline; filename=FacturaReserva.pdf";
             return File(file, "application/pdf");
         }
 
-        private async Task<string> RenderViewToStringAsync(string viewName, object model, ViewDataDictionary viewData = null)
+        private async Task<string> RenderViewToStringAsync(string viewName, object model, ViewDataDictionary? viewData = null)
         {
             if (string.IsNullOrEmpty(viewName))
             {

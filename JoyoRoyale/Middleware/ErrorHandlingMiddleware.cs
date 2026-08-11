@@ -65,9 +65,7 @@ namespace Crucero.Web.Middleware
 
         private static async Task HandleErrorAsync(HttpContext context)
         {
-            string? msg = context.Items["ErrorMessagesJson"] as string;
-            string redirectUrl = $"/Home/ErrorHandler?messagesJson={msg}";
-            context.Response.Redirect(redirectUrl);
+            context.Response.Redirect("/Home/Error");
             // Dummy Await 
             await Task.FromResult(1);
         }

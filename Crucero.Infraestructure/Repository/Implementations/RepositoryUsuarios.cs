@@ -41,6 +41,15 @@ namespace JoyoRoyale.Infraestructure.Repository.Implementations
             return @object!;
         }
 
+        public async Task<Usuarios?> FindByEmailAsync(string email)
+        {
+            var @object = await _context.Set<Usuarios>()
+                                        .Include(b => b.Rol)
+                                        .Where(p => p.Correo == email)
+                                        .FirstOrDefaultAsync();
+            return @object;
+        }
+
         public async Task<ICollection<Usuarios>> ListAsync()
         {
             var collection = await _context.Set<Usuarios>()

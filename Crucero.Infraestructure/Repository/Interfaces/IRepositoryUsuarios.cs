@@ -11,6 +11,7 @@ namespace JoyoRoyale.Infraestructure.Repository.Interfaces
     {
         Task<ICollection<Usuarios>> ListAsync();
         Task<Usuarios> FindByIdAsync(int id);
+        Task<Usuarios?> FindByEmailAsync(string email);
         Task<Usuarios> LoginAsync(string id, string password);
         Task<string> AddAsync(Usuarios entity);
         Task DeleteAsync(int id);

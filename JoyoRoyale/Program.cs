@@ -32,8 +32,6 @@ builder.Services.AddSingleton<wsindicadoreseconomicosSoapClient>(_ =>
 builder.Services.Configure<AppConfig>(builder.Configuration);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 //***********************
 // Configurar D.I.
@@ -61,13 +59,12 @@ builder.Services.AddTransient<IServiceItinerarios, ServiceItinerarios>();
 builder.Services.AddTransient<IServicePrecioHabitaciones, ServicePrecioHabitacion>();
 builder.Services.AddTransient<IServicePuertos, ServicePuertos>();
 builder.Services.AddTransient<IServiceComplementos, ServiceComplementos>();
-builder.Services.AddTransient<IServicePuertos, ServicePuertos>();
 builder.Services.AddTransient<IServiceCorreo, ServiceCorreo>();
 builder.Services.AddScoped<IServiceUsuarios, ServiceUsuarios>();
 builder.Services.AddScoped<IServicePaises, ServicePaises>();
 
 builder.Services.AddTransient<ITipoCambioService, WebTipoCambioService>();
-builder.Services.AddTransient<TipoCambioHostedService>();
+builder.Services.AddHostedService<TipoCambioHostedService>();
 
 //Seguridad
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -110,7 +107,7 @@ builder.Services.AddAutoMapper(config =>
     config.AddProfile<UsuariosProfile>();
 
 });
-// Configuar Conexión a la Base de Datos SQL
+// Configuar Conexiï¿½n a la Base de Datos SQL
 builder.Services.AddDbContext<JoyoRoyaleContext>(options =>
 {
     // it read appsettings.json file
@@ -120,13 +117,13 @@ builder.Services.AddDbContext<JoyoRoyaleContext>(options =>
         options.EnableSensitiveDataLogging();
 });
 //***********************
-//Configuración Serilog
+//Configuraciï¿½n Serilog
 // Logger. P.E. Verbose = muestra SQl Statement
 var logger = new LoggerConfiguration()
-                    // Limitar la información de depuración
+                    // Limitar la informaciï¿½n de depuraciï¿½n
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                     .Enrich.FromLogContext()
-                    // Log LogEventLevel.Verbose muestra mucha información, pero no es necesaria solo para el proceso de depuración
+                    // Log LogEventLevel.Verbose muestra mucha informaciï¿½n, pero no es necesaria solo para el proceso de depuraciï¿½n
                     .WriteTo.Console(LogEventLevel.Information)
                     .WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Information).WriteTo.File(@"Logs\Info-.log", shared: true, encoding: Encoding.ASCII, rollingInterval: RollingInterval.Day))
                     .WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level == LogEventLevel.Debug).WriteTo.File(@"Logs\Debug-.log", shared: true, encoding: System.Text.Encoding.ASCII, rollingInterval: RollingInterval.Day))
@@ -155,12 +152,18 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+else
+{
+    app.UseMiddleware<Crucero.Web.Middleware.ErrorHandlingMiddleware>();
+}
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+
+app.UseAuthentication();
 
 
 app.UseAuthorization();
